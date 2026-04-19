@@ -35,7 +35,7 @@ See "man sudo_root" for details.
 unybhgfd@Constance:~$
 ```
 
-在我们[配置了 Anaconda](http://123.60.188.246/discussion-detail/2966) 之后：
+在我们配置了 Anaconda（在另一个笔记：setting-up-conda-on-WSL.md）之后：
 ``` bash
 cd ~
 # 创建环境
