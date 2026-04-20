@@ -53,7 +53,6 @@ mkdir .vscode
 mkdir src
 echo -e '{\n    "files.encoding": "utf8",\n    "python.analysis.extraPaths": [\n        "./src"\n    ],\n    "pylint.args": [\n        "--max-line-length=120"\n    ],\n    "python-envs.defaultEnvManager": "ms-python.python:conda",\n    "python-envs.defaultPackageManager": "ms-python.python:conda",\n    "python-envs.pythonProjects": [],\n}' | tee ./.vscode/settings.json
 echo -e "tmp*\n__pycache__" | tee ./.gitignore
-echo -e "import
 ```
 
 然后我们打开 VSCode，点左下角的“远程”按钮，选择 WSL，等安装完插件左下角应该就能显示连上了“WSL: ubuntu”，然后打开我们的项目文件夹。
