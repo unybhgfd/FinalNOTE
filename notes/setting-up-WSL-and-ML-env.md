@@ -51,7 +51,7 @@ git init
 # 项目设置
 mkdir .vscode
 mkdir src
-echo -e '{\n    "files.encoding": "utf8",\n    "python.analysis.extraPaths": [\n        "./src"\n    ],\n    "pylint.args": [\n        "--max-line-length=120"\n    ],\n    "python-envs.defaultEnvManager": "ms-python.python:conda",\n    "python-envs.defaultPackageManager": "ms-python.python:conda",\n    "python-envs.pythonProjects": [],\n}' | tee ./.vscode/settings.json
+echo -e '{\n    "files.encoding": "utf8",\n    "python.analysis.extraPaths": [\n        "./src"\n    ],\n    "pylint.args": [\n        "--max-line-length=120"\n    ],\n    "python-envs.defaultEnvManager": "ms-python.python:conda",\n    "python-envs.defaultPackageManager": "ms-python.python:conda",\n}' | tee ./.vscode/settings.json
 echo -e "tmp*\n__pycache__" | tee ./.gitignore
 ```
 
@@ -68,6 +68,10 @@ echo -e "tmp*\n__pycache__" | tee ./.gitignore
     },
     "files.encoding": "utf8", // 默认文件编码
     "editor.editContext": false, // 修复输入法问题
+    "git.enableSmartCommit": true,
+    "git.autofetch": true, // 定期运行 git fetch
+    "python.analysis.typeCheckingMode": "standard",
+    "editor.rulers": [120], // 120 字符竖线
 }
 ```
 

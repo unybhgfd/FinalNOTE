@@ -1,11 +1,9 @@
 """
-Andrew Ng 机器学习课程  54.4.2: 前向传播的一般实现
-
-单层推理代码实现
+全连接层前向传播实现
 """
 
-
 import numpy as np
+
 
 def g(x):
     """激活函数，这里是 sigmoid"""
@@ -42,4 +40,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
