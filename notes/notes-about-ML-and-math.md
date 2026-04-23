@@ -92,13 +92,11 @@ TODO(unybhgfd)：真阴率是啥阴？
 
 该运算符合结合律，不符合交换律。定义略。
 
-## 线性代数
-
 ## 多元微积分
 
 ### 定义：偏导数
 
-有多元标量函数 $f(\mathbf x)$，其中 $\mathbf x = (x_1, x_2, \dots, x_n)$。$f$ 在 $\mathbf{x}$ 处的偏导数：
+有多元标量函数 $f(\mathbf x)$，其中 $\mathbf x = (x_1, x_2, \dots, x_n)$。我们定义偏导数
 
 $$
 \frac{\partial f}{\partial x_i}(\mathbf{x}) = \lim_{h \to 0}{\frac{f(x_1, \dots, x_i + h, \dots, x_n) - f(\mathbf{x})}{h}}
