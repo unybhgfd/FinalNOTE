@@ -206,3 +206,66 @@ $$
 > 上式中减号有时也写作加号。
 
 我们发现，$\nabla_\mathbf{x}\mathcal{L}(\mathbf{x}^*, \boldsymbol{\lambda}^*) = \mathbf{0}$ 这个条件等价于上面的 $(1)$ 式，且 $\frac{\partial\mathcal{L}}{\partial\lambda_j}(\mathbf{x}^*, \boldsymbol{\lambda}^*) = 0$ 等价于 $h_j(\mathbf{x}^*) = 0$。这两个条件同时成立
+
+## 信息论
+
+这里 $\log$ 函数底数默认是 $2$。
+
+对于随机变量，我们一般**只考虑**离散型随机变量。
+
+### 定义：自信息
+
+对于一个**离散型**随机变量 $X$ 的一个特定取值 $x$，它的自信息定义为：
+
+$$
+I(x) = -\log P(x)
+$$
+
+其中 $P(x)$ 指的是事件 $X=x$ 发生的概率。
+
+自信息可以理解为随机事件发生的“惊讶度”：概率为 $1$ 惊讶度为 $0$，概率越小惊讶度就越高，而不可能事件的发生有无限大的惊讶度。
+
+### 定义：熵（定义：香农熵）
+
+香农熵是随机事件的所谓“平均惊讶度”，即自信息的期望：
+
+$$
+H(X) = E(I(X)) = \sum_i I(x_i)P(x_i)
+$$
+
+### 定义：交叉熵
+
+对于事件 $X=x$（$x$ 所有可能的取值集合为 $\mathcal{X}$），我们有这个事件的真实概率（或者说真实的分布函数）$p(x)$ 和模型预测的概率$q(x)$，它们的交叉熵定义为：
+
+$$
+H(p, q) = -\sum_{x \in \mathcal{X}} p(x) \cdot \log q(x)
+$$
+
+### 定义：KL散度
+
+假设对离散型随机变量 $X$，存在两个概率分布 $P$、$Q$，**从** $P$ **到** $Q$ 的 KL 散度定义的推导如下（公式来自斯坦福大学的 [CS 109 第 17 课 PPT](http://web.stanford.edu/class/cs109/lectures/17-InformationTheory/17-InformationTheory.pdf)）。
+
+$$
+\begin{aligned}
+D_\text{KL}(P \Vert Q)
+&= \sum_{x} \text{ExcessSurprise}(x) \cdot P(x)                                            &\text{ExcessSurprise 是分布 Q 下比分布 P 下多出的惊讶度} \\
+&= \sum_{x} \left[ \text{Surprise}_Q(x) - \text{Surprise}_P(x) \right] \cdot P(x)          &\text{定义“额外惊讶度”为两分布下惊讶度的差} \\
+&= \sum_{x} \left[ \left( -\log Q(x) \right) - \left( -\log P(x) \right) \right] \cdot P(x)&\text{“惊讶度”即自信息，定义为概率的负对数} \\
+&= \sum_{x} \left[ \log P(x) - \log Q(x) \right] \cdot P(x)                                &\text{去括号化简} \\
+&= \sum_{x} \log \frac{P(x)}{Q(x)} \cdot P(x)                                              &\text{利用对数的性质继续化简} \\
+\end{aligned}
+$$
+
+它描述了用 $Q$ 近似 $P$ 时，“额外惊讶度”的期望，或者也可以理解为 $Q$ 到 $P$ 的“信息损失”。
+
+性质：
+* 非对称性：$D_\text{KL}(p \Vert q) \not= D_\text{KL}(q \Vert p)$。
+* 非负性：若对于所有 $x$ 都存在 $p(x) = q(x)$ 则 $D_\text{KL}(p \Vert q) = 0$，否则 $D_\text{KL}(p \Vert q) > 0$
+
+#### KL 散度与交叉熵、熵的关系
+
+对随机变量 $X$ 存在两个概率分布 $p$、$q$，KL 散度可以拆解为交叉熵和熵的差：
+
+$$
+D_\text{KL}(p \Vert q) = H(p, q) - H(p)
+$$
