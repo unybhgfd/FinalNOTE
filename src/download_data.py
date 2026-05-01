@@ -34,8 +34,8 @@ OSS_FILENAMES: dict[str, dict[str, str] | list[dict[str, str]]] = {
 def download_dataset(name: Literal[
     "boston_housing",
     "california_housing",
-    # "cifar10",
-    # "cifar100",
+    "cifar10",
+    "cifar100",
     "fashion_mnist",
     "imdb",
     "mnist",

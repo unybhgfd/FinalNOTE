@@ -29,9 +29,9 @@ model = keras.Sequential([
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(
         from_logits=True),  # 加上 from_logits=True 合并多个操作以减小浮点数误差
-    optimizer=keras.optimizers.Adam()
+    optimizer=keras.optimizers.Adam(),
 )
-model.fit(x_train, y_train, epochs=512)
+model.fit(x_train, y_train, epochs=512, validation_split=0.2)
 model.summary()
 
 losses: np.ndarray = keras.losses.sparse_categorical_crossentropy(
