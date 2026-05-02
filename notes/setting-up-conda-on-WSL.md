@@ -72,4 +72,9 @@ conda deactivate
 # git配置
 git config --global user.name "unybhgfd"
 git config --global user.email "unybhgfd@outlook.com"
+
+
+# 使用windows的字体配置
+echo -e '\n<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "fonts.dtd">\n<fontconfig>\n   <dir>/mnt/c/Windows/Fonts</dir>\n</fontconfig>' | sudo tee /etc/fonts/local.conf -a
+sudo fc-cache -fv
 ```
