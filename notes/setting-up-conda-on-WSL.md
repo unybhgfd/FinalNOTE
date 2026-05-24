@@ -72,6 +72,8 @@ conda deactivate
 # git配置
 git config --global user.name "unybhgfd"
 git config --global user.email "unybhgfd@outlook.com"
+# 记住账号密码
+git config --global credential.helper store
 
 
 # 使用windows的字体配置
