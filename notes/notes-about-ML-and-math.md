@@ -106,7 +106,7 @@ $$
 
 **s.t.**：subject to 后面是要满足的条件，subject to 也写作 $\text{s.t.}$（使得）。
 
-**可行域**（**可行集**）：所有满足这些约束条件的点 $\mathbb{x}$ 组成的集合被称为可行域，记作 $\mathcal{F} = \{ x \in \mathbb{R}^n \mid \forall i, g_i(x) \le 0 \,且\, \forall j, h_j(x) = 0 \}$。
+**可行域**：所有满足这些约束条件的点 $\mathbb{x}$ 组成的集合被称为可行域，记作 $\mathcal{F} = \{ x \in \mathbb{R}^n \mid \forall i, g_i(x) \le 0 \,且\, \forall j, h_j(x) = 0 \}$。
 
 约束优化就是在 $\mathcal{F}$ 中找到 $\argmin f(x)$。
 
@@ -122,11 +122,9 @@ $$
 
 线性无关。其中：
 * $\mathcal{A}(\mathbf{x}^*)=\{i\mid g_i(\mathbf{x}^*)=0\}$ 是所有起作用的不等式的“编号”集合，或者叫积极约束指标集。
-* **起作用约束**：起作用约束是相对于所有不等式约束和点 $\mathbf{x}^*$ 说的，意思就是 $g_i(\mathbf{x}^*)=0$。（**紧约束**、**积极约束**、**有效约束**）
+* **起作用约束**：起作用约束是相对于所有不等式约束和点 $\mathbf{x}^*$ 说的，意思就是 $g_i(\mathbf{x}^*)=0$。
 
 **正则点**：能使 LICQ 成立的点叫正则点。
-
-> 名字真多...
 
 可以将那个向量组看作点 $\mathbf{x}^*$ “碰到”的约束的“法向量”集合，对于不等式约束，法向量指向不可行区域。
 
@@ -239,11 +237,9 @@ $$
 
 我们首先把两个标签称为“正”和“负”，预测值为正就叫阳性，否则就是阴性，和真实值相符就是真阳性/真阴性，不符就是假阳性/假阴性。
 
-**真阳性（True Positive，TP）**、**真阴性（True Negetive，TN）**、**假阳性（False Positive，FP）**、**假阴性（False Negetive，FN）**。
-
 ### 多分类问题
 
-对于多分类问题，阴性和阳性不是固定的，我们一般把一个标签定位阳性其他就都是阴性，这种方法被称为 One-vs-Rest 策略。（**OvR策略**）
+对于多分类问题，阴性和阳性不是固定的，我们一般把一个标签定位阳性其他就都是阴性，这种方法被称为 One-vs-Rest 策略。
 
 ### 各种评估指标
 
@@ -258,3 +254,29 @@ $$
 **精确率（Precision）**、**查准率**：$\frac{TP}{TP + FP}$，预测为正的样本中正确的比率.
 
 **召回率（Recall）**、**查全率**：$\frac{TP}{TP + FN}$，所有真实值为正的样本中预测相符的比率
+
+## 最大似然估计（MLE）
+
+我们将模型表示为拟合真实数据分布 $p_\text{data}(\mathbf{x})$ 的函数 $p_\text{model}(\mathbf{x};\boldsymbol{\theta})$。这是个输入向量输出实数的函数，输入数据 $\mathbf{x}$ 预测它出现的概率，函数的具体行为由内部的算法以及参数 $\boldsymbol{\theta}$ 控制。
+
+我们有m个 i.i.d.（独立同分布）样本的数据集（向量的集合） $\mathbb{X} = {\boldsymbol{x}^{(1)}, \boldsymbol{x}^{(2)}, \dots, \boldsymbol{x}^(m)}$，由 $p_\text{data}$ 生成。MLE 方法认为的“最佳”预测，即对 $\boldsymbol{\theta}$ 的最大似然估计定义为，能使得 $p_\text{model}$ 对 $\mathbb{X}$ 中预测的所有概率之积最大的参数：
+
+$$
+\boldsymbol\theta_\text{ML} = \argmax_{\boldsymbol\theta} p_\text{model}(\mathbb{X}; \boldsymbol\theta) \\
+= \argmax_{\boldsymbol\theta} \prod_{i=1}^{m} p_\text{model}(\boldsymbol x^{(i)}; \boldsymbol\theta)
+$$
+
+连乘计算容易出现数值计算上的误差，我们加上个 $\log$ 函数让连乘变成求和：
+
+$$
+= \argmax_{\boldsymbol{\theta}} \log\left(
+   \prod_{i=1}^{m} p_\text{model}(\boldsymbol{x}^{(i)}; \boldsymbol{\theta})
+\right)
+= \argmax_{\boldsymbol{\theta}} \sum_{i=1}^{m} \log()
+$$
+
+模型的算法选择也很重要，因为 MLE 不关心对真实数据分布中出现概率为 0 的数据预测如何。
+
+## 最大后验估计（MAP）
+
+相比于 MLE，MAP 估计的是 $\boldsymbol{\theta}$ 在参数空间中的概率分布，而不是一个具体的值。除此之外，还加入了先验分布 $p(\boldsymbol\theta)$。
