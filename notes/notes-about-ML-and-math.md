@@ -257,25 +257,25 @@ $$
 
 ## 最大似然估计（MLE）
 
-我们将模型表示为拟合真实数据分布 $p_\text{data}(\mathbf{x})$ 的函数 $p_\text{model}(\mathbf{x};\boldsymbol{\theta})$。这是个输入向量输出实数的函数，输入数据 $\mathbf{x}$ 预测它出现的概率，函数的具体行为由内部的算法以及参数 $\boldsymbol{\theta}$ 控制。
+我们将模型表示为拟合真实数据分布 $p_\text{data}(\mathbf{x})$ 的函数 $p_\text{model}(\mathbf{x};\boldsymbol{\theta})$。这是个输入向量输出实数的函数，输入数据 $\mathbf{x}$ 预测它出现的概率（或概率密度），函数的具体行为由内部的算法以及参数 $\boldsymbol{\theta}$ 控制。
 
-我们有m个 i.i.d.（独立同分布）样本的数据集（向量的集合） $\mathbb{X} = {\boldsymbol{x}^{(1)}, \boldsymbol{x}^{(2)}, \dots, \boldsymbol{x}^(m)}$，由 $p_\text{data}$ 生成。MLE 方法认为的“最佳”预测，即对 $\boldsymbol{\theta}$ 的最大似然估计定义为，能使得 $p_\text{model}$ 对 $\mathbb{X}$ 中预测的所有概率之积最大的参数：
+我们有m个 i.i.d.（独立同分布）样本的数据集（向量的集合） $\mathbb{X} = \{\boldsymbol{x}^{(1)}, \boldsymbol{x}^{(2)}, \dots, \boldsymbol{x}^{(m)}\}$，由 $p_\text{data}$ 生成。MLE 方法估计的“最佳”参数，即对 $\boldsymbol{\theta}$ 的最大似然估计定义为，能使得 $p_\text{model}$ 对 $\mathbb{X}$ 中预测的所有概率之积最大的参数：
 
 $$
 \boldsymbol\theta_\text{ML} = \argmax_{\boldsymbol\theta} p_\text{model}(\mathbb{X}; \boldsymbol\theta) \\
-= \argmax_{\boldsymbol\theta} \prod_{i=1}^{m} p_\text{model}(\boldsymbol x^{(i)}; \boldsymbol\theta)
+= \argmax_{\boldsymbol\theta} \prod_{i=1}^{m} p_\text{model}(\boldsymbol{x}^{(i)}; \boldsymbol\theta)
 $$
 
-连乘计算容易出现数值计算上的误差，我们加上个 $\log$ 函数让连乘变成求和：
+连乘计算容易出现数值计算上的误差（下溢），我们加上个 $\log$ 函数让连乘变成求和，这样能降低误差，方便求导，同时不影响 $\argmax$：
 
 $$
 = \argmax_{\boldsymbol{\theta}} \log\left(
    \prod_{i=1}^{m} p_\text{model}(\boldsymbol{x}^{(i)}; \boldsymbol{\theta})
 \right)
-= \argmax_{\boldsymbol{\theta}} \sum_{i=1}^{m} \log()
+= \argmax_{\boldsymbol{\theta}} \sum_{i=1}^{m} \log p_\text{model}(\boldsymbol{x}^{(i)}; \boldsymbol{\theta})
 $$
 
-模型的算法选择也很重要，因为 MLE 不关心对真实数据分布中出现概率为 0 的数据预测如何。
+模型选择很重要，因为 MLE 只最大化训练样本的似然，并不直接约束模型对训练集外数据的预测。如果模型过于灵活，它很可能将训练集中未出现（但真实概率非零）的区域的概率推向 0，导致泛化能力弱。
 
 ## 最大后验估计（MAP）
 

@@ -1,8 +1,5 @@
 {
     "files.encoding": "utf8",
-    "python.analysis.extraPaths": [
-        "./cli_app"
-    ],
     "pylint.args": [
         "--max-line-length=120"
     ],
