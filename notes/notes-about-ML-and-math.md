@@ -75,14 +75,14 @@ $$
    \frac{\partial f}{\partial x_1}(\mathbf x),
    \dots,
    \frac{\partial f}{\partial x_n}(\mathbf x)
-\right]^T
+\right]^\top
 $$
 
 上面的 $\nabla$ 叫作 Nabla 算子。
 
 梯度向量指向高处，所以梯度下降时我们要将梯度向量减去梯度乘学习率。
 
-在约束优化，我们还会见到 $\nabla_\mathbf{x}\mathcal{L}(\mathbf{x}^*, \boldsymbol{\lambda}^*)$ 这种形式，首先函数 $\mathcal{L}(\mathbf{x}, \boldsymbol{\lambda})$ 两个输入都是向量，这个式子是说将 $\mathcal{L}$ 视为关于 $\mathbb{x}$ 的函数（参数 $\boldsymbol\lambda$ 固定，不再作为输入），对新的函数求偏导。
+在约束优化，我们还会见到 $\nabla_\mathbf{x}\mathcal{L}(\mathbf{x}^*, \bm{\lambda}^*)$ 这种形式，首先函数 $\mathcal{L}(\mathbf{x}, \bm{\lambda})$ 两个输入都是向量，这个式子是说将 $\mathcal{L}$ 视为关于 $\mathbb{x}$ 的函数（参数 $\bm\lambda$ 固定，不再作为输入），对新的函数求偏导。
 
 ## 约束优化
 
@@ -156,15 +156,15 @@ $$
 我们构造拉格朗日函数 $\mathcal{L}$：
 
 $$
-\mathcal{L}(\mathbf{x}, \boldsymbol{\lambda}) = f(\mathbf{x}) - \sum_{j=1}^p \lambda_j h_j(\mathbf{x}) \\
+\mathcal{L}(\mathbf{x}, \bm{\lambda}) = f(\mathbf{x}) - \sum_{j=1}^p \lambda_j h_j(\mathbf{x}) \\
 $$
 
 其中：
-* $\boldsymbol{\lambda}$是拉格朗日乘子向量。
+* $\bm{\lambda}$是拉格朗日乘子向量。
 
 > 上式中减号有时也写作加号。
 
-我们发现，$\nabla_\mathbf{x}\mathcal{L}(\mathbf{x}^*, \boldsymbol{\lambda}^*) = \mathbf{0}$ 这个条件等价于上面的 $(1)$ 式，且 $\frac{\partial\mathcal{L}}{\partial\lambda_j}(\mathbf{x}^*, \boldsymbol{\lambda}^*) = 0$ 等价于 $h_j(\mathbf{x}^*) = 0$。这两个条件同时成立
+我们发现，$\nabla_\mathbf{x}\mathcal{L}(\mathbf{x}^*, \bm{\lambda}^*) = \mathbf{0}$ 这个条件等价于上面的 $(1)$ 式，且 $\frac{\partial\mathcal{L}}{\partial\lambda_j}(\mathbf{x}^*, \bm{\lambda}^*) = 0$ 等价于 $h_j(\mathbf{x}^*) = 0$。这两个条件同时成立
 
 ## 信息论
 
@@ -257,26 +257,48 @@ $$
 
 ## 最大似然估计（MLE）
 
-我们将模型表示为拟合真实数据分布 $p_\text{data}(\mathbf{x})$ 的函数 $p_\text{model}(\mathbf{x};\boldsymbol{\theta})$。这是个输入向量输出实数的函数，输入数据 $\mathbf{x}$ 预测它出现的概率（或概率密度），函数的具体行为由内部的算法以及参数 $\boldsymbol{\theta}$ 控制。
+我们将模型表示为拟合真实数据分布 $p_\text{data}(\mathbf{x})$ 的函数 $p_\text{model}(\mathbf{x};\bm{\theta})$。这是个输入向量输出实数的函数，输入数据 $\mathbf{x}$ 预测它出现的概率（或概率密度），函数的具体行为由内部的算法以及参数 $\bm{\theta}$ 控制。
 
-我们有m个 i.i.d.（独立同分布）样本的数据集（向量的集合） $\mathbb{X} = \{\boldsymbol{x}^{(1)}, \boldsymbol{x}^{(2)}, \dots, \boldsymbol{x}^{(m)}\}$，由 $p_\text{data}$ 生成。MLE 方法估计的“最佳”参数，即对 $\boldsymbol{\theta}$ 的最大似然估计定义为，能使得 $p_\text{model}$ 对 $\mathbb{X}$ 中预测的所有概率之积最大的参数：
+我们有m个 i.i.d.（独立同分布）样本的数据集（向量的集合） $\mathbb{X} = \{\bm{x}^{(1)}, \bm{x}^{(2)}, \dots, \bm{x}^{(m)}\}$，由 $p_\text{data}$ 生成。MLE 方法估计的“最佳”参数，即对 $\bm{\theta}$ 的最大似然估计定义为，能使得 $p_\text{model}$ 对 $\mathbb{X}$ 中预测的所有概率之积最大的参数：
 
 $$
-\boldsymbol\theta_\text{ML} = \argmax_{\boldsymbol\theta} p_\text{model}(\mathbb{X}; \boldsymbol\theta) \\
-= \argmax_{\boldsymbol\theta} \prod_{i=1}^{m} p_\text{model}(\boldsymbol{x}^{(i)}; \boldsymbol\theta)
+\bm\theta_\text{ML} = \argmax_{\bm\theta} p_\text{model}(\mathbb{X}; \bm\theta) \\
+= \argmax_{\bm\theta} \prod_{i=1}^{m} p_\text{model}(\bm{x}^{(i)}; \bm\theta)
 $$
 
 连乘计算容易出现数值计算上的误差（下溢），我们加上个 $\log$ 函数让连乘变成求和，这样能降低误差，方便求导，同时不影响 $\argmax$：
 
 $$
-= \argmax_{\boldsymbol{\theta}} \log\left(
-   \prod_{i=1}^{m} p_\text{model}(\boldsymbol{x}^{(i)}; \boldsymbol{\theta})
+= \argmax_{\bm{\theta}} \log\left(
+   \prod_{i=1}^{m} p_\text{model}(\bm{x}^{(i)}; \bm{\theta})
 \right)
-= \argmax_{\boldsymbol{\theta}} \sum_{i=1}^{m} \log p_\text{model}(\boldsymbol{x}^{(i)}; \boldsymbol{\theta})
+= \argmax_{\bm{\theta}} \sum_{i=1}^{m} \log p_\text{model}(\bm{x}^{(i)}; \bm{\theta})
 $$
 
 模型选择很重要，因为 MLE 只最大化训练样本的似然，并不直接约束模型对训练集外数据的预测。如果模型过于灵活，它很可能将训练集中未出现（但真实概率非零）的区域的概率推向 0，导致泛化能力弱。
 
 ## 最大后验估计（MAP）
 
-相比于 MLE，MAP 估计的是 $\boldsymbol{\theta}$ 在参数空间中的概率分布，而不是一个具体的值。除此之外，还加入了先验分布 $p(\boldsymbol\theta)$。
+相比于 MLE，MAP 将 $\bm{\theta}$ 视为参数空间上的随机变量，估计的是 $\bm{\theta}$ 在参数空间中的概率分布，而不是一个具体的值。除此之外，还加入了先验分布 $p(\bm\theta)$。先验分布一般偏好更“简单”的解。
+
+和 MLE 的关系：
+
+* 当样本数趋于无穷时，最大后验概率估计一般趋向于最大似然估计。
+
+* 最大似然估计也可看作参数的先验概率密度函数服从均匀分布（相当于没有先验知识）的最大后验概率估计。
+
+* 当参数的先验概率密度函数比较准确时，最大后验概率估计的小样本性质大大优于最大似然估计。
+
+## 支持向量机
+
+支持向量机使用一个（有向）超平面（n 维空间中的 n - 1 维子空间）分类数据，平面一侧预测为正类，另一侧是负类。
+
+超平面方程：
+
+$$
+\bm{w}^\top \bm{x} + b = 0
+$$
+
+性质：$\lVert\bm{w}\rVert$ 越大，更改 $b$ 值时平面移动的幅度越大（因为实质上这个方程是n+1维线性方程的截面，$\lVert\bm{w}\rVert$ 大时高维坡面更“陡峭”）。
+
+线性可分：对于一个数据集，如果存在一个参数使得每个点，模型都能预测正确，则称这个数据集是线性可分的。
