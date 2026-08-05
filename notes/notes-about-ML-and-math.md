@@ -200,7 +200,7 @@ $$
 
 ### KL散度
 
-假设对离散型随机变量 $X$，存在两个概率分布 $P$、$Q$，**从** $P$ **到** $Q$ 的 KL 散度定义的推导如下（公式来自斯坦福大学的 [CS 109 第 17 课 PPT](http://web.stanford.edu/class/cs109/lectures/17-InformationTheory/17-InformationTheory.pdf)）。
+假设对离散型随机变量 $X$，存在两个概率分布 $P$、$Q$，**从** $P$ **到** $Q$ 的 KL 散度定义的推导如下：
 
 $$
 \begin{aligned}
