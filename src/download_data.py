@@ -47,7 +47,7 @@ def download_dataset(name: Literal[
 
     ```python
     # 使用 Keras 的文件下载接口用 OSS 下载文件到默认位置
-    load_dataset("mnist")
+    download_dataset("mnist")
 
     # 加载数据时会检测到下载的文件然后使用
     (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()

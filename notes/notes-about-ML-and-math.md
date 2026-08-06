@@ -82,7 +82,7 @@ $$
 
 梯度向量指向高处，所以梯度下降时我们要将梯度向量减去梯度乘学习率。
 
-在约束优化，我们还会见到 $\nabla_\mathbf{x}\mathcal{L}(\mathbf{x}^*, \bm{\lambda}^*)$ 这种形式，首先函数 $\mathcal{L}(\mathbf{x}, \bm{\lambda})$ 两个输入都是向量，这个式子是说将 $\mathcal{L}$ 视为关于 $\mathbb{x}$ 的函数（参数 $\bm\lambda$ 固定，不再作为输入），对新的函数求偏导。
+在约束优化，我们还会见到 $\nabla_\mathbf{x}\mathcal{L}(\mathbf{x}^*, \bm{\lambda}^*)$ 这种形式，首先函数 $\mathcal{L}(\mathbf{x}, \bm{\lambda})$ 两个输入都是向量，这个式子是说将 $\mathcal{L}$ 视为关于 $\mathbf{x}$ 的函数（参数 $\bm\lambda$ 固定，不再作为输入），对新的函数求偏导。
 
 ## 约束优化
 
@@ -162,7 +162,17 @@ $$
 其中：
 * $\bm{\lambda}$是拉格朗日乘子向量。
 
-我们发现，$\nabla_\mathbf{x}\mathcal{L}(\mathbf{x}^*, \bm{\lambda}^*) = \mathbf{0}$ 这个条件等价于上面的 $(1)$ 式，且 $\frac{\partial\mathcal{L}}{\partial\lambda_j}(\mathbf{x}^*, \bm{\lambda}^*) = 0$ 等价于 $h_j(\mathbf{x}^*) = 0$。这两个条件同时成立
+我们发现，$\nabla_\mathbf{x}\mathcal{L}(\mathbf{x}^*, \bm{\lambda}^*) = \mathbf{0}$ 这个条件等价于上面的 $(1)$ 式，且 $\frac{\partial\mathcal{L}}{\partial\lambda_j}(\mathbf{x}^*, \bm{\lambda}^*) = 0$ 等价于 $h_j(\mathbf{x}^*) = 0$。这两个条件同时成立时就能还原原来的等式约束条件。
+
+所以，原始的等式约束优化问题的最优性条件通过拉格朗日函数可以转化为求解方程组：
+
+$$
+\nabla_\mathbf{x} \mathcal{L}(\mathbf{x}, \bm{\lambda}) = 0 \quad
+\text{and} \quad
+\nabla_{\bm{\lambda}} \mathcal{L}(\mathbf{x}, \bm{\lambda}) = 0
+$$
+
+方程解完还没结束，需要判断解是最小值、最大值还是鞍点。
 
 ## 信息论
 
@@ -327,14 +337,14 @@ $$
 * 正类边界：$\bm{w}^\top \bm{x} + b = 1$；
 * 负类边界：$\bm{w}^\top \bm{x} + b = -1$。
 
-训练时需要让正类不跑到两个边界之间（满足对于所有正类数据点 $\bm x$，$\bm{w}^\top \bm{x} + b >= 1$），负类同理
+训练时需要让正类不跑到两个边界之间（满足对于所有正类数据点 $\bm x$，$\bm{w}^\top \bm{x} + b >= 1$，负类同理）。
 
 为了最大化模型的泛化能力，我们需要在不出错的情况下最大化这两个边界之间的距离（称作“间隔”，Margin）。根据超平面方程性质，就是最小化 $\lVert \bm w \rVert$。
 
 最大化间隔后，正类/负类边界都会有数据点落在边界上，这些点就叫支持向量。
 
-### SVM 的意义
+SVM 的 loss 函数被证明是一个凸函数，所以只有一个最小值。
 
-Cover 定理指出，将复杂模式通过非线性映射投射到高维空间时，数据更容易线性可分。所以我们可以训练出那个非线性映射，映射后的数据点就可以运用 SVM 进行分类。
+### 核技巧
 
-同时 SVM 的 loss 函数被证明是一个凸函数，所以只有一个最小值。
+Cover 定理指出，将复杂模式通过非线性映射 $\phi$ 投射到高维空间时，数据可以线性可分的概率会变大。所以我们可以训练出 $\phi，可以将映射后的点运用 SVM 进行分类。
