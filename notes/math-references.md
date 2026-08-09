@@ -8,3 +8,5 @@ PKU：[黄政宇·再生核希尔伯特空间](http://faculty.bicmr.pku.edu.cn/~
 # 网络
 
 [tomsheep·深度学习数学基础](https://zhuanlan.zhihu.com/p/25643286963)
+
+[NLP小学生·SVM系列-从基础到掌握](https://zhuanlan.zhihu.com/p/61123737)
