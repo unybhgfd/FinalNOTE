@@ -10,3 +10,5 @@ PKU：[黄政宇·再生核希尔伯特空间](http://faculty.bicmr.pku.edu.cn/~
 [tomsheep·深度学习数学基础](https://zhuanlan.zhihu.com/p/25643286963)
 
 [NLP小学生·SVM系列-从基础到掌握](https://zhuanlan.zhihu.com/p/61123737)
+
+[shuhuai008·机器学习白板推导](https://www.bilibili.com/video/BV1cW411C7RS)（[课件](https://github.com/shuhuai007/Machine-Learning-Session) | [免费版](https://www.bilibili.com/video/BV1cexezEEkJ)）

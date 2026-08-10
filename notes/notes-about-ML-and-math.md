@@ -1,26 +1,9 @@
 ## 数理逻辑
 
-### 各种条件：
-
-* **充分不必要条件**：$P$ 是 $Q$ 的这个条件，就是说 $P \Rightarrow Q$ 且 $Q \not\Rightarrow P$（**充分条件**）。
-
-* **必要不充分条件**：$P$ 是 $Q$ 的这个条件，就是说 $P \not\Rightarrow Q$ 且 $Q \Rightarrow P$（**必要条件**）。
-
-* **充分必要条件**：$P$ 是 $Q$ 的这个条件，就是说 $P \Rightarrow Q$ 且 $Q \Rightarrow P$（**充要条件**）。
-
-* **不充分不必要条件**：$P$ 是 $Q$ 的这个条件，就是说 $P \not\Rightarrow Q$ 且 $Q \not\Rightarrow P$（**既不充分也不必要条件**）。
-
-* 充分就是由 $P$ 能推出 $Q$，必要就是反过来可以。
-
-* 这里 $P$ 和 $Q$ 都应该是小写，但是小写容易弄混故改成大写。
-
 ### 两个量词
-
-定义略，这里只说格式。
 
 * 全称量词：$\forall x \in M, p(x)$。
 * 存在量词：$\exist x_0 \in M, p(x_0)$。
-* 逗号和 $\in M$ 可选。
 
 ## 映射
 
@@ -297,27 +280,6 @@ $$
 
 * 当参数的先验概率密度函数比较准确时，最大后验概率估计的小样本性质大大优于最大似然估计。
 
-## 再生核希尔伯特空间（RKHS）
-
-### 希尔伯特空间
-
-这里只讨论由部分 $f: \mathbb{R}^N \to \mathbb R$ 构成的希尔伯特函数空间 $\mathcal H$。
-
-如果说这些函数构成希尔伯特空间，则必须给出一个符合特定性质的内积运算，并且满足所有柯西序列收敛在空间内（完备性）。
-
-内积：$$\left<f, g\right> = \int f(x)g(x) \,\mathrm d x$$
-
-范数：$$\lVert f \rVert = \sqrt{\left< f, f \right>}$$
-
-### RKHS
-
-如果存在一个函数 $\kappa: \mathbb{R}^N \times \mathbb{R}^N \to \mathbb{R}$ 满足：
-
-* 对于所有 $x \in \mathbb{R}^N$，$\kappa(\cdot, x) \in \mathcal H$；
-* 对于所有 $f \in \mathcal H$ 和 $x \in \mathbb{R}^N$，$\left<f, \kappa(\cdot, x)\right> = f(x)$（可再生性）；
-
-则称 $\mathcal H$ 为 RKHS，$\kappa$ 是 $\mathcal H$ 的再生核函数。
-
 ## 支持向量机（SVM）
 
 超平面方程：
@@ -354,7 +316,7 @@ $$
 
 其中 $\bm{x}_i$ 为第 $i$ 个点，该点分类为 $y_i \in \{-1, 1\}$。
 
-### 软间隔支持向量机
+### 软间隔（Soft-Margin）支持向量机
 
 很多时候数据集并不是线性可分的。可以允许不满足约束的点存在，存在不满足约束的点时施加一定惩罚。我们可以添加松弛变量 $\xi_i \ge 0$ 让原本需要满足 $\bm{w}^\top \bm{x}_i + b \ge y_i$ 的点现在只需满足 $\bm{w}^\top \bm{x}_i + b \ge y_i - \xi_i$ 就行，问题变成：
 
@@ -372,3 +334,28 @@ $$
 ### 核技巧
 
 Cover 定理指出，将复杂模式通过非线性映射 $\phi$ 投射到高维空间时，数据可以线性可分的概率会变大。所以我们可以训练出 $\phi$，然后将映射后的点运用 SVM 进行分类。
+
+> $\phi: \mathcal X \to \mathcal Z$，其中 $\mathcal X$ 称为输入空间（原始空间），$\mathcal Z$ 称为特征空间。
+
+因为分类前需要给输入映射一下，所以 $\bm{w}^\top \bm{x}_i + b$ 就变为 $\phi(\bm{w})^\top \phi(\bm{x}_i) + b$。问题在于，很多时候 $\phi$ 映射无法计算计算，我们需要一个更高效的方法。
+
+不止 SVM，很多机器学习算法都可以写成样本间点积的形式，于是核技巧给出了一个间接计算 $\phi(\bm{w})^\top \phi(\bm{x}_i)$ 的方法。
+
+正定核函数：给出映射 $k: \mathcal{X} \times \mathcal{X} \to \mathbb{R}$，如果存在一个 $\phi: \mathcal X \to \mathcal Z$，使得对于任意 $\bm{x}, \bm{x}' \in \mathcal X$，都有 $k(\bm{x}, \bm{x}') = \left<\phi(\bm{x}), \phi(\bm{x}')\right>$，那么称 $k$ 是一个正定核函数，运算 $\left<\cdot, \cdot\right>$ 在 SVM 的例子中就是向量点积。
+
+等价的定义：给出映射 $k: \mathcal{X} \times \mathcal{X} \to \mathbb{R}$，如果它满足下面两点则是正定核函数：
+
+1. 对称性：$k(\bm{x}, \bm{z}) = k(\bm{z}, \bm{x})$
+
+2. 正定性：给出任意 $N$ 个 $\mathcal X$ 中的元素 $\bm{x}_1, ..., \bm{x}_N$，Gram 矩阵 $\bm{K}$ 是*半*正定的（所有特征值都非负），其中 $\bm{K}_{i, j} = k(\bm{x}_i, \bm{x}_j)$
+
+回到 SVM，由于 SVM 在（一般是）无限维的特征空间中工作，训练时参数 $\bm{w}$ 无法直接计算或储存，所以把预测函数写成通过几个原始空间的样本计算的形式：
+
+$$
+\left<\phi(\bm{w}), \phi(\bm{x}_i)\right> + b \quad\Rightarrow\quad
+b + \sum_i \alpha_i k(\bm{x}, \bm{x}_i)
+$$
+
+其中 $\bm{x}_i$ 是训练样本，$\bm\alpha$ 是系数向量
+
+核函数一般使用[高斯核（RBF 核，径向基函数核）](https://www.zhihu.com/question/660270670/answer/2070153889739978723)。
