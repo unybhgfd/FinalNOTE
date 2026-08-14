@@ -67,6 +67,30 @@ $$
 
 在约束优化，我们还会见到 $\nabla_\mathbf{x}\mathcal{L}(\mathbf{x}^*, \bm{\lambda}^*)$ 这种形式，首先函数 $\mathcal{L}(\mathbf{x}, \bm{\lambda})$ 两个输入都是向量，这个式子是说将 $\mathcal{L}$ 视为关于 $\mathbf{x}$ 的函数（参数 $\bm\lambda$ 固定，不再作为输入），对新的函数求偏导。
 
+### 雅可比矩阵
+
+对于一个非线性映射 $\bm f: \mathbb{R}^m \to \mathbb{R}^n$，对于点 $\bm x$ 和变换后的点 $\bm f(\bm x)$，我们定义类似导数的概念，将 $\bm x$ 附近的空间发生的变换（不关注空间发生的平移）近似为一个线性变换 $\bm{a} \mapsto \mathbf{J}\bm{a}$。这里的 $\mathbf J$ 就是 $\bm f$ 在 $\bm x$ 处的雅可比矩阵，定义为：
+
+$$
+J_{i, j} = \frac{\partial}{\partial x_j} \bm f(\bm x)_i
+$$
+
+### 海森矩阵
+
+对于**向量到标量**的非线性映射 $f: \mathbb{R}^n \to \mathbb{R}$，定义海森矩阵，它扩展了二阶导的定义：
+
+$$
+\bm{H}(f)(\bm x)_{i, j} = \frac{\partial^2}{\partial x_j \partial x_i} f(\bm x)
+$$
+
+二阶偏导连续时，海森矩阵对称。
+
+当点 $\bm x$ 处梯度为 0 时，可以用海森矩阵的特征值判定：
+* 若所有特征值都大于 0，则为局部极小值；
+* 若所有特征值都小于 0，则为局部极大值；
+* 若存在正负混合，则为鞍点；
+* 若有特征值为 0，需要更高阶分析或其他判定方法配合。
+
 ## 约束优化
 
 ### 约束优化的形式化表述
