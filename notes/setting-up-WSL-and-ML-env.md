@@ -43,7 +43,9 @@ conda create --name myenv python=3.12
 # 激活环境
 conda activate myenv
 # 安装需要的包
-pip install tensorflow-cpu numpy matplotlib pylint
+pip install tensorflow tensorflow-probability tf-keras
+pip install scikit-learn numpy matplotlib pylint ipykernel
+
 # 创建项目
 mkdir learnml && cd learnml
 git config --global init.defaultBranch main

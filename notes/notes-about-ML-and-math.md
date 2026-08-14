@@ -337,9 +337,9 @@ Cover 定理指出，将复杂模式通过非线性映射 $\phi$ 投射到高维
 
 > $\phi: \mathcal X \to \mathcal Z$，其中 $\mathcal X$ 称为输入空间（原始空间），$\mathcal Z$ 称为特征空间。
 
-因为分类前需要给输入映射一下，所以 $\bm{w}^\top \bm{x}_i + b$ 就变为 $\phi(\bm{w})^\top \phi(\bm{x}_i) + b$。问题在于，很多时候 $\phi$ 映射无法计算计算，我们需要一个更高效的方法。
+因为分类前需要给输入映射一下，所以 $\bm{w}^\top \bm{x}^{(i)} + b$ 就变为 $\phi(\bm{w})^\top \phi(\bm{x}^{(i)}) + b$。问题在于，很多时候 $\phi$ 映射无法计算计算，我们需要一个更高效的方法。
 
-不止 SVM，很多机器学习算法都可以写成样本间点积的形式，于是核技巧给出了一个间接计算 $\phi(\bm{w})^\top \phi(\bm{x}_i)$ 的方法。
+不止 SVM，很多机器学习算法都可以写成样本间点积的形式，于是核技巧给出了一个间接计算 $\phi(\bm{w})^\top \phi(\bm{x}^{(i)})$ 的方法。
 
 正定核函数：给出映射 $k: \mathcal{X} \times \mathcal{X} \to \mathbb{R}$，如果存在一个 $\phi: \mathcal X \to \mathcal Z$，使得对于任意 $\bm{x}, \bm{x}' \in \mathcal X$，都有 $k(\bm{x}, \bm{x}') = \left<\phi(\bm{x}), \phi(\bm{x}')\right>$，那么称 $k$ 是一个正定核函数，运算 $\left<\cdot, \cdot\right>$ 在 SVM 的例子中就是向量点积。
 
@@ -347,15 +347,53 @@ Cover 定理指出，将复杂模式通过非线性映射 $\phi$ 投射到高维
 
 1. 对称性：$k(\bm{x}, \bm{z}) = k(\bm{z}, \bm{x})$
 
-2. 正定性：给出任意 $N$ 个 $\mathcal X$ 中的元素 $\bm{x}_1, ..., \bm{x}_N$，Gram 矩阵 $\bm{K}$ 是*半*正定的（所有特征值都非负），其中 $\bm{K}_{i, j} = k(\bm{x}_i, \bm{x}_j)$
+2. 正定性：给出任意 $N$ 个 $\mathcal X$ 中的元素 $\bm{x}^{(1)}, \dots, \bm{x}^{(N)}$，Gram 矩阵 $\bm{K}$ 是*半*正定的（所有特征值都非负），其中 $\bm{K}_{i, j} = k(\bm{x}^{(i)}, \bm{x}^{(j)})$
 
-回到 SVM，由于 SVM 在（一般是）无限维的特征空间中工作，训练时参数 $\bm{w}$ 无法直接计算或储存，所以把预测函数写成通过几个原始空间的样本计算的形式：
+回到 SVM，由于 SVM 在无限维的特征空间中工作，训练时参数 $\bm{w}$ 无法直接计算或存储，所以把预测函数写成通过几个原始空间的样本计算的形式：
 
 $$
-\left<\phi(\bm{w}), \phi(\bm{x}_i)\right> + b \quad\Rightarrow\quad
-b + \sum_i \alpha_i k(\bm{x}, \bm{x}_i)
+\left<\phi(\bm{w}), \phi(\bm{x}^{(i)})\right> + b \quad\Rightarrow\quad
+b + \sum_i \alpha_i k(\bm{x}, \bm{x}^{(i)})
 $$
 
 其中 $\bm{x}_i$ 是训练样本，$\bm\alpha$ 是系数向量
 
 核函数一般使用[高斯核（RBF 核，径向基函数核）](https://www.zhihu.com/question/660270670/answer/2070153889739978723)。
+
+## 多维高斯分布
+
+$\mathcal N(\bm x; \bm\mu, \bm\Sigma)$，其中 $\bm\mu$ 是最高点坐标（均值），$\bm\Sigma$ 是分布的协方差矩阵，需要是对称正定的，这意味着它满秩并且所有特征值均为正数。
+
+这里的 $\bm\Sigma$ 可以进行谱分解，即作用是以函数最高点为中心向 $N$ 个正交的方向拉伸分布。
+
+计算时需要用到 $\bm\Sigma^{-1}$，但不需要 $\bm\Sigma$，所以我们使用精度矩阵代替：$\bm\beta = \bm\Sigma^{-1}$，分布记为 $\mathcal N(\bm x; \bm\mu, \bm\beta^{-1})$。
+
+## 混合密度网络（MDN）
+
+混合密度网络用于回归任务，它的输出单元和通常的神经网络不同，是一个概率分布。具有 $N$ 个分量，输出维数为 $D$的高斯混合输出为：
+
+$$
+p(\bm y, \bm x) = \sum_{i=1}^N p(\mathrm c = i | \bm x) \mathcal{N}(\bm y; \bm\mu^{(i)}(\bm x), \bm\Sigma^{(i)}(\bm x))
+$$
+
+神经网络需要输出：
+
+1. 混合组件 $p(\mathrm c = i | \bm x)$，一个 $N$ 维向量。由于是离散概率分布，所以需要通过 $softmax$ 函数保证和为 1。
+
+2. 高斯分布的均值 $\bm\mu^{(i)}(\bm x)$，总共是 $N$ 个 $D$ 维向量。
+
+3. 协方差矩阵 $\bm\Sigma^{(i)}(\bm x)$（对称正定）。一般假设各维度独立，此时它是一个对角矩阵，相当于 $N$ 个 $D$ 维向量。需要保证每个元素为正，比如可以用 ELU 激活函数加上一个小常数。
+
+## 激活函数
+
+**logistic sigmoid**：以前经常用，输入绝对值较大时会饱和（导数接近 0）。
+
+**tanh**：可以将 logistic sigmoid 平移缩放得到，当必须使用 sigmoid 激活函数时通常比 logistic sigmoid 好用，因为在 0 附近近似于 $g(z) = z$。
+
+**ReLU**：比 sigmoid 好，但是由于左侧导数为 0，学习率过大时输入远小于 0 导致权重很难更新，即死亡神经元。不过人的大脑也只有小部分的神经元活跃。另外一个缺点是没法输出负值。
+
+**Leaky ReLU**：$g(x) = max\{\alpha x, x\}$，其中 $\alpha$ 是一个小的正数，比如 0.01。这样做能让函数左边导数不为 0，避免了死亡神经元问题。
+
+**PReLU**：将 Leaky ReLU 的 $\alpha$ 作为一个可学习的参数，无约束，初值大于 0（一般是 0.25 或 0.3）。可以整层共用一个 $\alpha$（channel-shared）或者每个神经元单独一个（channel-wise，参数量多）。
+
+**maxout**：maxout 单元将输入划分成 $k$ 段，每段取最大值，可以拟合 $k$ 段的分段线性的凸函数它跟 ReLU 一样不会饱和，但同时也不会有死亡神经元问题，不过参数量很多。
