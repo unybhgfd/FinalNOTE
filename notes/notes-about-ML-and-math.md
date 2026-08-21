@@ -69,7 +69,7 @@ $$
 
 ### 雅可比矩阵
 
-对于一个非线性映射 $\bm f: \mathbb{R}^m \to \mathbb{R}^n$，对于点 $\bm x$ 和变换后的点 $\bm f(\bm x)$，我们定义类似导数的概念，将 $\bm x$ 附近的空间发生的变换（不关注空间发生的平移）近似为一个线性变换 $\bm{a} \mapsto \mathbf{J}\bm{a}$。这里的 $\mathbf J$ 就是 $\bm f$ 在 $\bm x$ 处的雅可比矩阵，定义为：
+对于一个非线性映射 $\bm f: \mathbb{R}^m \to \mathbb{R}^n$，对于点 $\bm x$ 和变换后的点 $\bm f(\bm x)$，我们定义类似导数的概念，将 $\bm x$ 附近的空间发生的变换（不关注空间发生的平移）近似为一个线性变换 $\bm{a} \mapsto \bm{J}\bm{a}$。这里的 $\bm J$ 就是 $\bm f$ 在 $\bm x$ 处的雅可比矩阵，定义为：
 
 $$
 J_{i, j} = \frac{\partial}{\partial x_j} \bm f(\bm x)_i
@@ -574,6 +574,33 @@ $$
 显然 $\bm x' = \bm x + \bm \mu$。
 
 这种方法也可以作为一种半监督学习的方法。
+
+### 正切传播
+
+为简化问题，假设模型用来解决二分类问题，输出为标量 $f(\bm x)$。
+
+我们需要获得流形在 $\bm x$ 附近的所有切向量 $\bm{v}^{(i)}$（更严谨的说法是构成该点处切空间的所有基向量），可以通过训练自编码器或分析数据分布等方法获得。
+
+我们想让 $f$ 梯度和切空间尽可能正交，得到正切传播的正则项：
+
+$$
+\Omega(f) = \sum_i \left(
+   \nabla_{\bm x} f(\bm x)^\top \bm{v}^{(i)}
+\right)^2
+$$
+
+对于多分类问题，$f$ 一般输出 logits 向量，此时可以对所有维度计算梯度。假设输出向量维度为 $C$：
+
+$$
+\Omega(f) = \sum_i \sum_{c=1}^C \left(
+   \nabla_{\bm x} f_c(\bm x)^\top \bm{v}^{(i)}
+\right)^2
+= \sum_i \left(
+   \lVert \bm{J}_f(\bm x) \bm v^{(i)} \rVert_F
+\right)^2
+$$
+
+等于雅可比矩阵与切向量的矩阵乘积的 Frobenius 范数的平方。
 
 ## 模型选择
 
