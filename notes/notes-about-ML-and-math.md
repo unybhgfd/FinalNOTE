@@ -674,3 +674,28 @@ $$
 假设输入输出均值为零。我们希望模型的输入和输出方差相同，解方程得到 $a = \sqrt\frac{3}{m}$。我们还想让反向传播时和下一层梯度方差相等，假设没有激活函数，得到 $a = \sqrt\frac{3}{n}$。Glorot 初始化建议把根号下的数取调和平均值，即 $a = \sqrt\frac{6}{m+n}$。
 
 虽然假设没有激活函数，但这种对于线性模型的策略在其非线性对应中的效果也不错。
+
+在 $m$ 或 $n$ 很大时会导致参数变得很小。
+
+#### 稀疏初始化
+
+以特定概率将参数置零，没有置零的权重值从特定范围的标准分布采样。
+
+随着 ReLU 族激活函数的普及，通用性有所下降，但在特定网络架构中仍有应用。
+
+### AdaGrad
+
+AdaGrad 旨在应用于凸问题时快速收敛，可以对参数各个维度自动调节学习率。
+
+给出全局学习率 $\epsilon$ 和用于防止除零的小常数 $\delta$，初始化 $\bm\theta$，$\bm r$ 初值为零，循环：
+
+* 计算 $\bm\theta$ 处梯度估计 $\bm g$
+* $\bm r \leftarrow \bm r + \bm g \odot \bm g$（$\odot$ 是逐元素乘法）
+* $\Delta\bm\theta = -\frac{\epsilon}{\delta + \sqrt{\bm r}} \odot \bm g$（都是向量逐元素运算）
+* $\bm\theta \leftarrow \bm\theta + \Delta\bm\theta$
+
+显然 $\bm r$ 只增不减，对于非凸问题会导致步长过小
+
+### RMSProp
+
+RMSProp 算法改自 AdaGrad，改变梯度积累为指数加权的移动平均，防止步长越来越小。
