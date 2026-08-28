@@ -724,7 +724,7 @@ Adam 融合了动量法（一阶矩）和 RMSProp（二阶矩）
 * $\Delta\bm\theta = -\epsilon \frac{\bm s}{\sqrt{\bm r} + \delta}$
 * $\bm\theta \leftarrow \bm\theta + \Delta\bm\theta$
 
-偏差修正后一阶矩估计的期望等于梯度的期望。
+假设梯度估计（作为一个随机变量）的分布不会随 $\bm\theta$ 改变，偏差修正后一阶矩估计的期望等于梯度的期望。
 
 ## 二阶优化问题
 
