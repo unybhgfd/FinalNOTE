@@ -84,6 +84,8 @@ $\bm x$ 二阶偏导连续时，海森矩阵对称。
 * 若存在正负混合，则为鞍点；
 * 若有特征值为 0，需要更高阶分析或其他判定方法配合。
 
+海森矩阵在函数定义域内处处半正定和函数是凸函数是等价的。
+
 ## 约束优化
 
 ### 约束优化的形式化表述
@@ -698,4 +700,52 @@ AdaGrad 旨在应用于凸问题时快速收敛，可以对参数各个维度自
 
 ### RMSProp
 
-RMSProp 算法改自 AdaGrad，改变梯度积累为指数加权的移动平均，防止步长越来越小。
+RMSProp 算法改自 AdaGrad，改变梯度积累为指数加权的移动平均，通过减少之前得到的平方梯度，防止步长越来越小。
+
+给出全局学习率 $\epsilon$，衰减速率 $\rho$，用于防止除零的小常数 $\delta$，初始化 $\bm\theta$，$\bm r$ 初值为零，循环：
+
+* 计算 $\bm\theta$ 处梯度估计 $\bm g$
+* $\bm r \leftarrow \rho \bm r + (1-\rho) \bm g \odot \bm g$
+* $\Delta\bm\theta = -\frac{\epsilon}{\sqrt{\delta + \bm r}} \odot \bm g$
+* $\bm\theta \leftarrow \bm\theta + \Delta\bm\theta$
+
+### Adam
+
+Adam 融合了动量法（一阶矩）和 RMSProp（二阶矩）
+
+给出步长 $\epsilon$，矩估计衰减速率 $\rho_1$、$\rho_2$（一般接近但小于 1），用于防止除零的小常数 $\delta$，初始化 $\bm\theta$，一阶矩变量 $\bm s$、二阶矩变量 $\bm r$ 和步数计数器 $t$ 初值为零，循环：
+
+* 计算 $\bm\theta$ 处梯度估计 $\bm g$
+* $t \leftarrow t+1$
+* 更新有偏一阶矩估计：$\bm s \leftarrow \rho_1 \bm s + (1-\rho_1) \bm g$
+* 更新有偏二阶矩估计：$\bm r \leftarrow \rho_2 \bm r + (1-\rho_2) \bm g \odot \bm g$
+* 一阶矩偏差修正：$\hat{\bm s} \leftarrow \frac{\bm s}{1 - \rho_1^t}$
+* 二阶矩偏差修正：$\hat{\bm r} \leftarrow \frac{\bm r}{1 - \rho_2^t}$
+* $\Delta\bm\theta = -\epsilon \frac{\bm s}{\sqrt{\bm r} + \delta}$
+* $\bm\theta \leftarrow \bm\theta + \Delta\bm\theta$
+
+偏差修正后一阶矩估计的期望等于梯度的期望。
+
+## 二阶优化问题
+
+前面说的算法都是使用梯度 $\bm g$，属于一阶方法。二阶方法则需要求海森矩阵（或部分二阶偏导）.
+
+### 牛顿法
+
+给出一个函数 $f$，用二阶泰勒展开来近似 $\bm x^{(0)}$ 附近的 $f(\bm x)$：
+
+$$
+f(\bm x) \approx f(\bm x^{(0)}) \\
++ (\bm x - \bm x^{(0)})^\top \nabla_{\bm x} f(\bm x^{(0)}) \\
++ \frac{1}{2} (\bm x - \bm x^{(0)})^\top \left(\bm H(f)(\bm x^{(0)})\right) (\bm x - \bm x^{(0)})
+$$
+
+得到临界点：
+
+$$
+\bm x^* = \bm x^{(0)} - \bm{H}(f)(\bm x^{(0)})^{-1} \nabla_{\bm x}f(x^{(0)})
+$$
+
+如果目标函数 $f$ 是有最小值的二次函数，牛顿法可以直接跑到最小值点，如果不是，牛顿法反复迭代多次可以很快接近附近的临界点。如果附近的临界点不是最小点牛顿法不适用。
+
+牛顿法每次迭代计算量很大：参数数量设为 $n$，需要在内存中储存 $n \times n$ 的海森矩阵，还要算它的逆矩阵（速度是 $O(n^3)$）。所以深度学习一般不直接使用牛顿法。
