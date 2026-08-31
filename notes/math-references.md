@@ -16,3 +16,5 @@ PKU：[黄政宇·再生核希尔伯特空间](http://faculty.bicmr.pku.edu.cn/~
 [keras.org.cn·代码示例](https://keras.org.cn/examples/)
 
 [明也无涯·激活函数](https://www.cnblogs.com/makefile/p/activation-function.html)
+
+[微软·AI-Edu](https://microsoft.github.io/ai-edu/)
