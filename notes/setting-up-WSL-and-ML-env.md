@@ -1,7 +1,5 @@
 记录一次完全没配置过编程环境，无 N 卡的电脑中 Ubuntu (WSL 2) 中 Python 机器学习环境配置。
 
-> A.K.A. 挑战在我妈的电脑上学机器学习
-
 先下个 PowerShell...下完了。默认界面好丑，换成 Catppuccin 的 Lattle（亮色）和 Mocha（暗色）主题。我们根据 [GitHub 上的配置流程](https://github.com/catppuccin/windows-terminal?tab=readme-ov-file#usage)复制配置到 PowerShell 的配置文件。然后进设置 > 配色方案 > 右键配色方案 > 设为默认，然后保存，接着在外观-应用程序外观里选择要的外观，然后保存，大功告成。
 
 在命令行输入 `wsl --install --web-download` 一键配置 WSL 2，这个命令会[默认安装 Ubuntu 发行版](https://learn.microsoft.com/zh-cn/windows/wsl/basic-commands#install)，其中 `--web-download` 选项使程序从 GitHub 而不是微软应用商店下载。
@@ -45,6 +43,10 @@ conda activate myenv
 # 安装需要的包
 pip install tensorflow tensorflow-probability tf-keras
 pip install scikit-learn numpy matplotlib pylint ipykernel
+# 安装 PyTorch-CPU
+pip3 install torch torchvision \
+  --index-url https://mirror.sjtu.edu.cn/pytorch-wheels/cpu \
+  --timeout 120 --retries 10
 
 # 创建项目
 mkdir learnml && cd learnml
