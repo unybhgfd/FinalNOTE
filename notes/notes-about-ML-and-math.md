@@ -252,8 +252,8 @@ $$
 $$
 \begin{aligned}
 D_\text{KL}(P \Vert Q)
-&= \sum_{x} \text{ExcessSurprise}(x) \cdot P(x)                                            &\text{ExcessSurprise 是分布 Q 下比分布 P 下多出的惊讶度} \\
-&= \sum_{x} \left[ \text{Surprise}_Q(x) - \text{Surprise}_P(x) \right] \cdot P(x)          &\text{定义“额外惊讶度”为两分布下惊讶度的差} \\
+&= \sum_{x} \mathop\text{ExcessSurprise}(x) \cdot P(x)                                            &\text{ExcessSurprise 是分布 Q 下比分布 P 下多出的惊讶度} \\
+&= \sum_{x} \left[ \mathop\text{Surprise}_Q(x) - \mathop\text{Surprise}_P(x) \right] \cdot P(x)          &\text{定义“额外惊讶度”为两分布下惊讶度的差} \\
 &= \sum_{x} \left[ \left( -\log Q(x) \right) - \left( -\log P(x) \right) \right] \cdot P(x)&\text{“惊讶度”即自信息，定义为概率的负对数} \\
 &= \sum_{x} \left[ \log P(x) - \log Q(x) \right] \cdot P(x)                                &\text{去括号化简} \\
 &= \sum_{x} \log \frac{P(x)}{Q(x)} \cdot P(x)                                              &\text{利用对数的性质继续化简} \\
@@ -894,3 +894,31 @@ $t=3$ 时展开：
 $$
 \bm s^{(3)} = f(f(\bm s^{(1)}; \bm \theta); \bm\theta)
 $$
+
+### vanilla RNN
+
+#### 两种设计
+
+$$
+\bm{x} \xrightarrow{\bm U} \bm{h} \xrightarrow{\bm V} \bm{o} \to \bm{L} \leftarrow \bm{y}
+$$
+
+其中：
+* $\bm x$：输入
+* $\bm y$：输出
+* $\bm h$：hidden
+* $\bm o$：output
+* $\bm L$：loss
+* 箭头上的字母是模型参数
+
+分类：
+1. 加上隐藏到隐藏的循环 $\bm{h}^{(t-1)} \xrightarrow{\bm W} \bm{h}^{(t)}$
+2. 加上输出到隐藏的循环 $\bm{o}^{(t-1)} \xrightarrow{\bm W} \bm{h}^{(t)}$
+
+第一类比起第二类更加强大（$\bm{h}$ 能储存任意想要的信息），但没法并行化，因为计算 $\bm{h}^{(t)}$ 需要 $\bm{h}^{(t-1)}$。
+
+第二类由于输出层需要完成模型的监督学习任务，所以更难捕捉用于预测未来的关于过去的所有信息，但是可以通过**导师驱动过程**使得 $t$ 时刻与 $t-1$ 时刻能够同时计算，包括正向求值和反向求导都能在所有时刻实现并行计算。【关于并行化和导师驱动过程的解释有误，明天再改，我要玩终末地】
+
+#### BPTT
+
+进行完整的梯度下降（BP）速度和内存占用都是 $\mathcal{O}(\tau)$（$\tau$ 是步数），随时间反向传播（BPTT）方法可以【待补充】。
