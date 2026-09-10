@@ -302,7 +302,7 @@ $$
 
 ## 最大似然估计（MLE）
 
-我们将模型表示为拟合真实数据分布 $p_\text{data}(\mathbf{x})$ 的函数 $p_\text{model}(\mathbf{x};\bm{\theta})$。这是个输入向量输出实数的函数，输入数据 $\mathbf{x}$ 预测它出现的概率（或概率密度），函数的具体行为由内部的算法以及参数 $\bm{\theta}$ 控制。
+我们将模型表示为拟合真实数据分布 $p_\text{data}(\bm{x})$ 的函数 $p_\text{model}(\bm{x};\bm{\theta})$。这是个输入向量输出实数的函数，输入数据 $\bm{x}$ 预测它出现的概率（或概率密度），函数的具体行为由内部的算法以及参数 $\bm{\theta}$ 控制。
 
 我们有m个 i.i.d.（独立同分布）样本的数据集（向量的集合） $\mathbb{X} = \{\bm{x}^{(1)}, \bm{x}^{(2)}, \dots, \bm{x}^{(m)}\}$，由 $p_\text{data}$ 生成。MLE 方法估计的“最佳”参数，即对 $\bm{\theta}$ 的最大似然估计定义为，能使得 $p_\text{model}$ 对 $\mathbb{X}$ 中预测的所有概率之积最大的参数：
 
@@ -900,7 +900,7 @@ $$
 #### 两种设计
 
 $$
-\bm{x} \xrightarrow{\bm U} \bm{h} \xrightarrow{\bm V} \bm{o} \to \bm{L} \leftarrow \bm{y}
+\bm{x} \xrightarrow{\bm U} \bm{h} \xrightarrow{\bm V} \bm{o} \to L \leftarrow \bm{y}
 $$
 
 其中：
@@ -908,17 +908,44 @@ $$
 * $\bm y$：输出
 * $\bm h$：hidden
 * $\bm o$：output
-* $\bm L$：loss
-* 箭头上的字母是模型参数
+* $L$：loss
 
 有两类：
 1. 包含隐藏到隐藏的循环 $\bm{h}^{(t-1)} \xrightarrow{\bm W} \bm{h}^{(t)}$
 2. 包含输出到隐藏的循环 $\bm{o}^{(t-1)} \xrightarrow{\bm W} \bm{h}^{(t)}$
 
-第二类没第一类强大，因为输出层需要完成模型的监督学习任务，所以不能捕捉用于预测未来的关于过去的信息，除非输出本身包含了需要的信息。
+第二类没第一类强大，因为输出层需要完成模型的监督学习任务，所以不能捕捉用于预测未来的关于过去的信息，除非输出本身包含了需要的信息。但第二类训练时可以通过导师驱动过程实现不同时刻的并行化。
 
-第二类训练时可以实现不同时刻的并行化，因为能解耦时间步，就是说可以将数据集中给出的 $\bm{y}^{(t-1)}$ 作为 $t$ 时刻需要的 $\bm{o}^{(t-1)}$。
+具体的更新方程（第一类）：
+
+$$
+\bm a^{(t)} = \bm b + \bm W \bm h^{(t-1)} + \bm U \bm x^{(t)}\\
+\bm h^{(t)} = \tanh(\bm a^{(t)})\\
+\bm o^{(t)} = \bm c + \bm V \bm h^{(t)}\\
+\hat{\bm y}^{(t)} = \mathop\text{softmax}(\bm o^{(t)})
+$$
+
+其中 $\bm{b\, c\, W\, U\, V}$ 是模型参数。
+
+#### 导师驱动过程
+
+如果模型对于 $t-1$ 时刻的信息，只需要 $\bm{o}^{(t-1)}$ 输入到 $t$ 时刻，那么可以将数据集中给出的 $\bm{y}^{(t-1)}$ 作为 $t$ 时刻需要的 $\bm{o}^{(t-1)}$，这样实现了在训练时的并行化。
+
+这样训练时并不是最大似然估计，因为往 $p_\text{model}$ 的预测过程里加了数据集里的真实值，会导致训练和预测时来自上一步的输入分布不一致，即曝光偏差（exposure bias）。
 
 #### BPTT
 
-进行完整的梯度下降（BP）速度和内存占用都是 $\mathcal{O}(\tau)$（$\tau$ 是步数），随时间反向传播（BPTT）方法可以【待补充】。
+定义一共 $\tau$ 步的 RNN 总损失为各时间步损失之和 $L = \sum_{i=1}^\tau L^{(t)}$，得到：
+
+$$
+\begin{aligned}
+&\frac{\partial L}{\partial L^{(i)}}\\
+&= \frac{\partial L^{(1)}}{\partial L^{(i)}}
++ \dots + \frac{\partial L^{(i)}}{\partial L^{(i)}}
++ \dots + \frac{\partial L^{(\tau)}}{\partial L^{(i)}}\\
+&= 0 + \dots + \frac{\partial L^{(i)}}{\partial L^{(i)}} + \dots + 0\\
+&= 1
+\end{aligned}
+$$
+
+进行完整的梯度下降（BP）速度和内存占用都是 $\mathcal{O}(\tau)$，随时间反向传播（BPTT）方法可以【待补充】。

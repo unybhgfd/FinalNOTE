@@ -76,6 +76,7 @@ echo -e "tmp*\n__pycache__" | tee ./.gitignore
     "git.autofetch": true, // 定期运行 git fetch
     "python.analysis.typeCheckingMode": "standard",
     "editor.rulers": [120], // 120 字符竖线
+    "[markdown]": { "editor.autoClosingBrackets": "always" }, // 永远进行括号补全
 }
 ```
 
