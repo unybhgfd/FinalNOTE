@@ -1,5 +1,5 @@
 # 教案
-Stanford：[信息论](http://web.stanford.edu/class/cs109/lectures/17-InformationTheory/17-InformationTheory.pdf)
+Stanford：[CS109·信息论](http://web.stanford.edu/class/cs109/lectures/17-InformationTheory/17-InformationTheory.pdf)
 
 SJTU：[杨启哲·离散数学](https://www.dm2025w.spacepenguin.com.cn/)
 
