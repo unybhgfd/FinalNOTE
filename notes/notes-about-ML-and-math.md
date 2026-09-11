@@ -935,17 +935,49 @@ $$
 
 #### BPTT
 
-定义一共 $\tau$ 步的 RNN 总损失为各时间步损失之和 $L = \sum_{i=1}^\tau L^{(t)}$，得到：
+RNN 中进行完整的反向传播（BP）速度和内存占用都是 $\mathcal{O}(\tau)$，随时间反向传播（BPTT）方法通过限制反向传播的时间步数来控制成本。
+
+> **待补充**：花书 10.2.2 - 10.9
+
+### LSTM
 
 $$
 \begin{aligned}
-&\frac{\partial L}{\partial L^{(i)}}\\
-&= \frac{\partial L^{(1)}}{\partial L^{(i)}}
-+ \dots + \frac{\partial L^{(i)}}{\partial L^{(i)}}
-+ \dots + \frac{\partial L^{(\tau)}}{\partial L^{(i)}}\\
-&= 0 + \dots + \frac{\partial L^{(i)}}{\partial L^{(i)}} + \dots + 0\\
-&= 1
+\bm g^{(t)} &= \sigma\!\left(\bm b^{g} + \bm W^{g} \bm h^{(t-1)} + \bm U^{g} \bm x^{(t)}\right) &&\text{(输入门)}\\[4pt]
+\bm f^{(t)} &= \sigma\!\left(\bm b^{f} + \bm W^{f} \bm h^{(t-1)} + \bm U^{f} \bm x^{(t)}\right) &&\text{(遗忘门)}\\[4pt]
+\bm q^{(t)} &= \sigma\!\left(\bm b^{q} + \bm W^{q} \bm h^{(t-1)} + \bm U^{q} \bm x^{(t)}\right) &&\text{(输出门)}\\[4pt]
+\tilde{\bm s}^{(t)} &= \tanh\!\left(\bm b^{s} + \bm W^{s} \bm h^{(t-1)} + \bm U^{s} \bm x^{(t)}\right) &&\text{(候选状态)}\\[4pt]
+\bm s^{(t)} &= \bm f^{(t)} \odot \bm s^{(t-1)} + \bm g^{(t)} \odot \tilde{\bm s}^{(t)} &&\text{(细胞状态更新)}\\[4pt]
+\bm h^{(t)} &= \bm q^{(t)} \odot \tanh\!\left(\bm s^{(t)}\right) &&\text{(隐状态读出)}\\[4pt]
+\bm o^{(t)} &= \bm b^{y} + \bm V \bm h^{(t)}\\[4pt]
+\hat{\bm y}^{(t)} &= \operatorname{softmax}\!\left(\bm o^{(t)}\right)
 \end{aligned}
+% 元宝 AI 生成
 $$
 
-进行完整的梯度下降（BP）速度和内存占用都是 $\mathcal{O}(\tau)$，随时间反向传播（BPTT）方法可以【待补充】。
+其中：
+* 遗忘门控制长期记忆信息 $\bm s^{(t-1)}$（cell state）的比例（实现“只记住有用的信息”）
+* 输入门控制短期记忆（上一步的隐藏层输出）$\bm h^{(t-1)}$ 的比例
+* 输出门控制隐藏层输出的比例（将“记住什么”和“输出什么”解耦）
+
+如图：
+
+![LSTM 的架构图](<imgs/LSTM Architecture.png>)
+
+图中绿色的线为短期记忆，蓝色的线是长期记忆。
+
+### GRU
+
+$$
+\begin{aligned}
+\bm r^{(t)} &= \sigma\!\left(\bm b^{r} + \bm W^{r} \bm h^{(t-1)} + \bm U^{r} \bm x^{(t)}\right) &&\text{(复位门)}\\[4pt]
+\bm u^{(t)} &= \sigma\!\left(\bm b^{u} + \bm W^{u} \bm h^{(t-1)} + \bm U^{u} \bm x^{(t)}\right) &&\text{(更新门)}\\[4pt]
+\tilde{\bm h}^{(t)} &= \tanh\!\left(\bm b^{h} + \bm W^{h}\!\left(\bm r^{(t)} \odot \bm h^{(t-1)}\right) + \bm U^{h} \bm x^{(t)}\right) &&\text{(候选隐状态)}\\[4pt]
+\bm h^{(t)} &= \bm u^{(t)} \odot \bm h^{(t-1)} + \bigl(1 - \bm u^{(t)}\bigr) \odot \tilde{\bm h}^{(t)} &&\text{(隐状态更新)}\\[4pt]
+\bm o^{(t)} &= \bm b^{y} + \bm V \bm h^{(t)}\\[4pt]
+\hat{\bm y}^{(t)} &= \operatorname{softmax}\!\left(\bm o^{(t)}\right)
+\end{aligned}
+% 元宝 AI 生成
+$$
+
+GRU 又去掉了 cell state，所以在长序列/大数据量上比不过 LSTM，但可以胜任序列长度较小、数据量适中的情况。
