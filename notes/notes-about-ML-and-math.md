@@ -427,12 +427,12 @@ $\mathcal N(\bm x; \bm\mu, \bm\Sigma)$，其中 $\bm\mu$ 是最高点坐标（�
 混合密度网络用于回归任务，它的输出单元和通常的神经网络不同，是一个概率分布。具有 $N$ 个分量，输出维数为 $D$ 的高斯混合输出为：
 
 $$
-p(\bm y, \bm x) = \sum_{i=1}^N p(\mathrm c = i | \bm x) \mathcal{N}(\bm y; \bm\mu^{(i)}(\bm x), \bm\Sigma^{(i)}(\bm x))
+p(\bm y, \bm x) = \sum_{i=1}^N p(\mathrm c = i \mid \bm x) \mathcal{N}(\bm y; \bm\mu^{(i)}(\bm x), \bm\Sigma^{(i)}(\bm x))
 $$
 
 神经网络需要输出：
 
-1. 混合组件 $p(\mathrm c = i | \bm x)$，一个 $N$ 维向量。由于是离散概率分布，所以需要通过 $softmax$ 函数保证和为 1。
+1. 混合组件 $p(\mathrm c = i \mid \bm x)$，一个 $N$ 维向量。由于是离散概率分布，所以需要通过 $softmax$ 函数保证和为 1。
 
 2. 高斯分布的均值 $\bm\mu^{(i)}(\bm x)$，总共是 $N$ 个 $D$ 维向量。
 
@@ -962,7 +962,7 @@ $$
 
 如图：
 
-![LSTM 的架构图](<imgs/LSTM Architecture.png>)
+![LSTM 的架构图](<imgs/LSTM-architecture.png>)
 
 图中绿色的线为短期记忆，蓝色的线是长期记忆。
 
@@ -981,3 +981,27 @@ $$
 $$
 
 GRU 又去掉了 cell state，所以在长序列、大数据量的情况下比不过 LSTM，但可以胜任序列长度较小、数据量适中的情况。
+
+# 概率图模型（结构化概率模型）
+
+有向图适用于表达随机变量间的因果关系，而无向图更适合表达随机变量之间的软约束。
+
+## 贝叶斯网络（有向图模型）
+
+给出有 $N$ 个顶点的有向图 $\mathcal G$，每个节点视作一个随机变量 $\mathrm x_i$，节点的父节点集合记为 $\mathop\text{Pa}_\mathcal{G}(\mathrm x_i)$。$\mathcal G$ 表示的联合概率分布为：
+
+$$
+p(\mathrm{x}_1, \dots, \mathrm{x}_N) = \prod_i p(\mathrm{x}_i \mid \mathop\text{Pa}_\mathcal{G}(\mathrm{x}_i))
+$$
+
+比如：
+
+![有向图例子](<imgs/example-bayesian-network-graph.png>)
+
+$$
+\def\a{\mathrm a} \def\b{\mathrm b}
+\def\c{\mathrm c} \def\d{\mathrm d}
+\def\e{\mathrm e}
+
+p(\a, \dots, \e) = p(\a) + p(\b \mid \a) + p(\c \mid \a, \b) + p(\d \mid \b) + p(\e \mid \c)
+$$
