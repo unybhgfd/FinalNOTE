@@ -988,7 +988,7 @@ GRU 又去掉了 cell state，所以在长序列、大数据量的情况下比�
 
 ## 贝叶斯网络（有向图模型）
 
-给出有 $N$ 个顶点的有向图 $\mathcal G$，每个节点视作一个随机变量 $\mathrm x_i$，节点的父节点集合记为 $\mathop\text{Pa}_\mathcal{G}(\mathrm x_i)$。$\mathcal G$ 表示的联合概率分布为：
+给出有 $N$ 个顶点的有向无环图 $\mathcal G$，每个节点视作一个随机变量 $\mathrm x_i$，节点的父节点集合记为 $\mathop\text{Pa}_\mathcal{G}(\mathrm x_i)$。$\mathcal G$ 表示的联合概率分布为：
 
 $$
 p(\mathrm{x}_1, \dots, \mathrm{x}_N) = \prod_i p(\mathrm{x}_i \mid \mathop\text{Pa}_\mathcal{G}(\mathrm{x}_i))
