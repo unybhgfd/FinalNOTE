@@ -252,8 +252,8 @@ $$
 $$
 \begin{aligned}
 D_\text{KL}(P \Vert Q)
-&= \sum_{x} \mathop\text{ExcessSurprise}(x) \cdot P(x)                                            &\text{ExcessSurprise 是分布 Q 下比分布 P 下多出的惊讶度} \\
-&= \sum_{x} \left[ \mathop\text{Surprise}_Q(x) - \mathop\text{Surprise}_P(x) \right] \cdot P(x)          &\text{定义“额外惊讶度”为两分布下惊讶度的差} \\
+&= \sum_{x} \operatorname{ExcessSurprise}(x) \cdot P(x)                                            &\text{ExcessSurprise 是分布 \textit{Q} 下比分布 \textit{P} 下多出的惊讶度} \\
+&= \sum_{x} \left[ \operatorname{Surprise}_Q(x) - \operatorname{Surprise}_P(x) \right] \cdot P(x)          &\text{定义“额外惊讶度”为两分布下惊讶度的差} \\
 &= \sum_{x} \left[ \left( -\log Q(x) \right) - \left( -\log P(x) \right) \right] \cdot P(x)&\text{“惊讶度”即自信息，定义为概率的负对数} \\
 &= \sum_{x} \left[ \log P(x) - \log Q(x) \right] \cdot P(x)                                &\text{去括号化简} \\
 &= \sum_{x} \log \frac{P(x)}{Q(x)} \cdot P(x)                                              &\text{利用对数的性质继续化简} \\
@@ -922,7 +922,7 @@ $$
 \bm a^{(t)} = \bm b + \bm W \bm h^{(t-1)} + \bm U \bm x^{(t)}\\
 \bm h^{(t)} = \tanh(\bm a^{(t)})\\
 \bm o^{(t)} = \bm c + \bm V \bm h^{(t)}\\
-\hat{\bm y}^{(t)} = \mathop\text{softmax}(\bm o^{(t)})
+\hat{\bm y}^{(t)} = \operatorname{softmax}(\bm o^{(t)})
 $$
 
 其中 $\bm{b\, c\, W\, U\, V}$ 是模型参数。
@@ -988,10 +988,10 @@ GRU 又去掉了 cell state，所以在长序列、大数据量的情况下比�
 
 ## 贝叶斯网络（有向图模型）
 
-给出有 $N$ 个顶点的有向无环图 $\mathcal G$，每个节点视作一个随机变量 $\mathrm x_i$，节点的父节点集合记为 $\mathop\text{Pa}_\mathcal{G}(\mathrm x_i)$。$\mathcal G$ 表示的联合概率分布为：
+给出有 $N$ 个顶点的有向无环图 $\mathcal G$，每个节点视作一个随机变量 $\mathrm x_i$，节点的父节点集合记为 $\operatorname{Pa}_\mathcal{G}(\mathrm x_i)$。$\mathcal G$ 表示的联合概率分布为：
 
 $$
-p(\mathrm{x}_1, \dots, \mathrm{x}_N) = \prod_i p(\mathrm{x}_i \mid \mathop\text{Pa}_\mathcal{G}(\mathrm{x}_i))
+p(\mathrm{x}_1, \dots, \mathrm{x}_N) = \prod_i p(\mathrm{x}_i \mid \operatorname{Pa}_\mathcal{G}(\mathrm{x}_i))
 $$
 
 比如：
