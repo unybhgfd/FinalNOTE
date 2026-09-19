@@ -264,7 +264,7 @@ $$
 
 性质：
 * 非对称性：$D_\text{KL}(p \Vert q) \not= D_\text{KL}(q \Vert p)$。
-* 非负性：若对于所有 $x$ 都存在 $p(x) = q(x)$ 则 $D_\text{KL}(p \Vert q) = 0$，否则 $D_\text{KL}(p \Vert q) > 0$。
+* 非负性（吉布斯不等式）：若对于所有 $x$ 都存在 $p(x) = q(x)$ 则 $D_\text{KL}(p \Vert q) = 0$，否则 $D_\text{KL}(p \Vert q) > 0$。
 
 ### KL 散度与交叉熵、熵的关系
 
@@ -1005,3 +1005,18 @@ $$
 
 p(\a, \dots, \e) = p(\a) + p(\b \mid \a) + p(\c \mid \a, \b) + p(\d \mid \b) + p(\e \mid \c)
 $$
+
+条件概率分布可以使用高斯分布：
+
+$$
+p(\mathbf{x}_i = \bm{x} \mid \operatorname{Pa}(\mathbf{x}_i)) = \mathcal{N}(
+   \bm x;
+   (
+      \sum_{j \in \operatorname{Pa}(\mathbf{x}_i)}
+      \bm W_{i, j} \bm x_j + \bm b_i
+   ),
+   \bm\Sigma_i
+)
+$$
+
+其中 $j$ 是父节点的索引（这里记法不是很严谨），$\bm W_{i, j}$ 是一个矩阵（可能不是方阵）。
