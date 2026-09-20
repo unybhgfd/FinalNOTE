@@ -20,3 +20,5 @@ PKU：[黄政宇·再生核希尔伯特空间](http://faculty.bicmr.pku.edu.cn/~
 [微软·AI-Edu](https://microsoft.github.io/ai-edu/)
 
 [windmissing·花书笔记](https://windmissing.github.io/Bible-DeepLearning/)
+
+[饺子博士and饭老师·因果推断入门](https://space.bilibili.com/491707363/lists/25679?type=season)
