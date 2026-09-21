@@ -986,6 +986,8 @@ GRU 又去掉了 cell state，所以在长序列、大数据量的情况下比�
 
 ## 辛普森悖论
 
+### 例子 1
+
 如图：
 
 ![辛普森悖论](imgs/cholesterol-simpsons-paradox.png)
@@ -997,6 +999,43 @@ GRU 又去掉了 cell state，所以在长序列、大数据量的情况下比�
 产生这种情况的原因是，年龄同时是运动量和胆固醇含量的因变量：
 
 ![解释](imgs/cholesterol-explanation.png)
+
+此时关注分类数据（按年龄分开）更为合理。
+
+### 例子 2
+
+![吃药恢复率](imgs/trt-simpsons-paradox.png)
+
+图中 trt. 意思是吃某种药，recovered 意思是恢复。将男性吃药、不吃药恢复率（恢复人数除以总人数）分别记为 $①$ 和 $②$，女性的记为 $③$ 和 $④$，总体的（各人数分别相加）记为 $A$ 和 $B$。
+
+“悖论”的地方在于，图中虽然 $① > ②$，$③ > ④$，但是 $A < B$。
+
+我们用概率论来分析这个问题。设三个二值的随机变量 $\mathrm g, \mathrm r, \mathrm t \in \{0, 1\}$，分别代表是否是男生、是否恢复以及是否吃药。得到：
+
+$$
+① = p(\mathrm r = 1 \mid \mathrm g = 1, \mathrm t = 1)\\
+② = p(\mathrm r = 1 \mid \mathrm g = 1, \mathrm t = 0)\\
+③ = p(\mathrm r = 1 \mid \mathrm g = 0, \mathrm t = 1)\\
+④ = p(\mathrm r = 1 \mid \mathrm g = 0, \mathrm t = 0)\\
+$$
+
+用边缘概率公式展开 $A$、$B$：
+
+$$
+\begin{aligned}
+A &= p(\mathrm r = 1 \mid \mathrm t = 1)\\
+&= p(\mathrm r = 1 \mid \mathrm t = 1, \mathrm g = 0) p(\mathrm g = 0 \mid \mathrm t = 1)\\
+&+ p(\mathrm r = 1 \mid \mathrm t = 1, \mathrm g = 1) p(\mathrm g = 1 \mid \mathrm t = 1)\\
+B &= \dots
+\end{aligned}
+$$
+
+设 $p(\mathrm g = 1 \mid \mathrm t = 1)$ 为 $r$，得到：
+
+$$
+A = r① + (1-r)③\\
+B = r② + (1-r)④\\
+$$
 
 # 概率图模型（结构化概率模型）
 
