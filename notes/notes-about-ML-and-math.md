@@ -1030,12 +1030,14 @@ B &= \dots
 \end{aligned}
 $$
 
-设 $p(\mathrm g = 1 \mid \mathrm t = 1)$ 为 $r$，得到：
+设 $p(\mathrm g = 1 \mid \mathrm t = 1)$ 为 $r$，$p(\mathrm g = 1 \mid \mathrm t = 0)$ 为 $s$，得到：
 
 $$
 A = r① + (1-r)③\\
-B = r② + (1-r)④\\
+B = s② + (1-s)④\\
 $$
+
+由于 $r$ 和 $s$ 可以在 0 到 1 内任意取值，所以即使 $① > ②$，$③ > ④$  还是有可能有 $A < B$。
 
 # 概率图模型（结构化概率模型）
 
