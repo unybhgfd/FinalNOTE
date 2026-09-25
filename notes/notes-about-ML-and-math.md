@@ -1063,6 +1063,39 @@ $$
 
 有因果性但没相关性的例子：人体有 A、B 两种疾病，它们要么同时出现要么同时不出现。A 会生成某种东西导致癌症，而 B 能消解 A 的效应防止癌症。那么这样 A 确实会导致癌症（因果性），但由于 B 的存在，A 的存在和患癌没有统计相关性。
 
+## 基本结构
+
+### 链式结构
+
+因果图：
+
+$$
+\mathrm x \to \mathrm y \to \mathrm z
+$$
+
+根据图，得到联合分布 $p(\mathrm x, \mathrm y, \mathrm z) = p(\mathrm x)\, p(\mathrm y \mid \mathrm x)\, p(\mathrm z \mid \mathrm y)$。
+
+有：
+
+$$
+\begin{aligned}
+& p(\mathrm z \mid \mathrm x, \mathrm y)\\
+& = \frac{p(\mathrm z, \mathrm x, \mathrm y)}{p(\mathrm x, \mathrm y)}\\
+& = \frac{p(\mathrm x)\, p(\mathrm y \mid \mathrm x)\, p(\mathrm z \mid \mathrm y)}{p(\mathrm x)\, p(\mathrm y \mid \mathrm x)}\\
+& = p(\mathrm z \mid \mathrm y)
+\end{aligned}
+$$
+
+于是我们得到条件独立性 $\mathrm x \perp \mathrm z \mid \mathrm y$。
+
+或者这样解释：$\mathrm x$ 只能通过 $\mathrm y$ 来影响 $\mathrm z$，而 $\mathrm y$ 被固定（观测到）后，能影响的路径就被**阻断**了，于是独立。
+
+有多个 $\mathrm y$ 的情况：
+
+![有多个 Y 的链式结构](imgs/CI-chain-structure-multiple.png)
+
+这里有 $\mathrm X \perp \mathrm Z \mid \{\mathrm Y_1, \mathrm Y_2, \mathrm Y_3, \dots\}$。
+
 # 变分推断
 
 ## 问题
@@ -1070,11 +1103,11 @@ $$
 我们想根据数据 $\bm x$ 更新参数 $\bm z$，根据贝叶斯公式：
 
 $$
-\overbrace{p(\bm z \mid \bm x)}^\text{posterior} = \frac{
-   \overbrace{p(\bm x \mid \bm z)}^\text{likelihood} \,
-   \overbrace{p(\bm z)}^\text{prior}
+\overbrace{p(\mathbf z \mid \mathbf x)}^\text{posterior} = \frac{
+   \overbrace{p(\mathbf x \mid \mathbf z)}^\text{likelihood} \,
+   \overbrace{p(\mathbf z)}^\text{prior}
 }{
-   \underbrace{p(\bm x)}_\text{evidence}
+   \underbrace{p(\mathbf x)}_\text{evidence}
 }
 $$
 
