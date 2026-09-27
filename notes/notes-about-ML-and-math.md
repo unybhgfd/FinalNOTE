@@ -252,11 +252,11 @@ $$
 $$
 \begin{aligned}
 D_\text{KL}(P \Vert Q)
-&= \sum_{x} \operatorname{ExcessSurprise}(x) \cdot P(x)                                            &\text{ExcessSurprise 是分布 \textit{Q} 下比分布 \textit{P} 下多出的惊讶度} \\
-&= \sum_{x} \left[ \operatorname{Surprise}_Q(x) - \operatorname{Surprise}_P(x) \right] \cdot P(x)          &\text{定义“额外惊讶度”为两分布下惊讶度的差} \\
-&= \sum_{x} \left[ \left( -\log Q(x) \right) - \left( -\log P(x) \right) \right] \cdot P(x)&\text{“惊讶度”即自信息，定义为概率的负对数} \\
-&= \sum_{x} \left[ \log P(x) - \log Q(x) \right] \cdot P(x)                                &\text{去括号化简} \\
-&= \sum_{x} \log \frac{P(x)}{Q(x)} \cdot P(x)                                              &\text{利用对数的性质继续化简} \\
+&= \sum_{x} \operatorname{ExcessSurprise}(x) \cdot P(x)            &\text{ExcessSurprise 是分布 \textit{Q} 下比分布 \textit{P} 下多出的惊讶度} \\
+&= \sum_{x} \left[ \operatorname{Surprise}_Q(x) - \operatorname{Surprise}_P(x) \right] \cdot P(x)  &\text{定义“额外惊讶度”为两分布下惊讶度的差} \\
+&= \sum_{x} \left[ \left( -\log Q(x) \right) - \left( -\log P(x) \right) \right] \cdot P(x)        &\text{“惊讶度”即自信息，定义为概率的负对数} \\
+&= \sum_{x} \left[ \log P(x) - \log Q(x) \right] \cdot P(x)                                        &\text{去括号化简} \\
+&= \sum_{x} \log \frac{P(x)}{Q(x)} \cdot P(x)                                                      &\text{利用对数的性质继续化简} \\
 \end{aligned}
 $$
 
@@ -432,7 +432,7 @@ $$
 
 神经网络需要输出：
 
-1. 混合组件 $p(\mathrm c = i \mid \bm x)$，一个 $N$ 维向量。由于是离散概率分布，所以需要通过 $softmax$ 函数保证和为 1。
+1. 混合组件 $p(\mathrm c = i \mid \bm x)$，一个 $N$ 维向量。由于是离散概率分布，所以需要通过 $\operatorname{softmax}$ 函数保证和为 1。
 
 2. 高斯分布的均值 $\bm\mu^{(i)}(\bm x)$，总共是 $N$ 个 $D$ 维向量。
 
@@ -446,7 +446,7 @@ $$
 
 **ReLU**：比 sigmoid 好，计算成本较低，但是由于左侧导数为 0，学习率过大时输入远小于 0 导致权重很难更新，即死亡神经元。不过人的大脑也只有小部分的神经元活跃。另外一个缺点是没法输出负值。
 
-**Leaky ReLU**：$g(x) = max\{\alpha x, x\}$，其中 $\alpha$ 是一个小的正数，比如 0.01。这样做能让函数左边导数不为 0，避免了死亡神经元问题。
+**Leaky ReLU**：$g(x) = \max\{\alpha x, x\}$，其中 $\alpha$ 是一个小的正数，比如 0.01。这样做能让函数左边导数不为 0，避免了死亡神经元问题。
 
 **PReLU**：将 Leaky ReLU 的 $\alpha$ 作为一个可学习的参数，无约束，初值大于 0（一般是 0.25 或 0.3）。可以整层共用一个 $\alpha$（channel-shared）或者每个神经元单独一个（channel-wise，参数量多）。
 
@@ -1073,28 +1073,75 @@ $$
 \mathrm x \to \mathrm y \to \mathrm z
 $$
 
-根据图，得到联合分布 $p(\mathrm x, \mathrm y, \mathrm z) = p(\mathrm x)\, p(\mathrm y \mid \mathrm x)\, p(\mathrm z \mid \mathrm y)$。
+这里其实并不是完整的图，我们还假设每个随机变量都有一个额外的父节点，这些节点称为噪声（外生噪声），所有噪声联合独立。
 
-有：
+这里有条件独立：$\mathrm x \perp \mathrm z \mid \mathrm y$。
+
+#### 阻断的解释
+
+可以根据因果图来解释：由于 $\mathrm x$ 只能通过 $\mathrm y$ 来影响 $\mathrm z$，而现在 $\mathrm y$ 已经固定（观测到），无法改变，所以说路径 $\mathrm y \to \mathrm z$ 就被**阻断**了，于是独立。
+
+注意这里观测到 $\mathrm y$ 时，
+
+或者这样解释：$\mathrm y$ 被固定后，$\mathrm y$ 给出了 $\mathrm z$ 对于 $\mathrm x$ 需要的所有信息。
+
+#### 独立性证明（去掉噪声）
+
+设三个变量对应的噪声分别是 $\mathrm u^\mathrm x$、$\mathrm u^\mathrm y$、$\mathrm u^\mathrm z$。
+
+我们需要用 SCM（结构因果模型）的定义：每个随机变量就是噪声的取值和父节点的取值输入进某个函数得到。
+
+比如这里有：
 
 $$
-\begin{aligned}
-& p(\mathrm z \mid \mathrm x, \mathrm y)\\
-& = \frac{p(\mathrm z, \mathrm x, \mathrm y)}{p(\mathrm x, \mathrm y)}\\
-& = \frac{p(\mathrm x)\, p(\mathrm y \mid \mathrm x)\, p(\mathrm z \mid \mathrm y)}{p(\mathrm x)\, p(\mathrm y \mid \mathrm x)}\\
-& = p(\mathrm z \mid \mathrm y)
-\end{aligned}
+\mathrm y \overset{\text{def}}= f^\mathrm y(\mathrm u^\mathrm y = u^\mathrm y, \mathrm x = x)
 $$
 
-于是我们得到条件独立性 $\mathrm x \perp \mathrm z \mid \mathrm y$。
+我们又说**所有噪声联合独立**，那么 $\mathrm u^\mathrm z \perp \{\mathrm u^\mathrm x, \mathrm u^\mathrm y\}$。
 
-或者这样解释：$\mathrm x$ 只能通过 $\mathrm y$ 来影响 $\mathrm z$，而 $\mathrm y$ 被固定（观测到）后，能影响的路径就被**阻断**了，于是独立。
+> **待补充**：完整证明。
 
-有多个 $\mathrm y$ 的情况：
+这里还可以推导出下面贝叶斯网络的联合分布分解。
+
+#### 有多个 $\mathrm y$ 的情况：
 
 ![有多个 Y 的链式结构](imgs/CI-chain-structure-multiple.png)
 
 这里有 $\mathrm X \perp \mathrm Z \mid \{\mathrm Y_1, \mathrm Y_2, \mathrm Y_3, \dots\}$。
+
+#### 例子
+
+回顾辛普森悖论的例子 3，如果固定血压，那么血药促进的恢复效果 $\text{Blood Pressure} \to \text{Recovered}$ 就被阻塞，于是只剩下药物本身对恢复的抑制作用。
+
+### 分叉结构
+
+$$
+\mathrm y \leftarrow \mathrm x \to \mathrm z
+$$
+
+有 $\mathrm y \perp \mathrm z \mid \mathrm x$，两条路径都被阻断。
+
+再来看辛普森悖论的例子 1，这里年龄同时影响了胆固醇和运动量，为了去掉它的影响，我们固定年龄，这样就只有运动量到胆固醇这条边了。$\text{Exercise} \leftarrow \text{Age} \to \text{Cholesterol}$ 这条边并没因果性，我们固定年龄，可以去掉这条通路产生的相关性，这样就更为客观。
+
+或者这样，如果我们并不知道运动量和胆固醇含量有没有因果性，但是知道运动量会同时控制两者，这样显然先切断我们知道的这个相关性更合理。
+
+### 对撞结构
+
+$$
+\mathrm x \to \mathrm z \leftarrow \mathrm y
+$$
+
+这里有 $\mathrm x \perp \mathrm y$ 以及 $\mathrm x \not\perp \mathrm y \mid \mathrm z$。
+
+比如：
+
+$$
+\mathrm x = \mathrm u^\mathrm x\\
+\mathrm y = \mathrm u^\mathrm y\\
+\mathrm z = \mathrm x + \mathrm y + \mathrm u^\mathrm z
+$$
+
+当观测到 $\mathrm z = C$ 后，剩下的两个需要满足约束 $\mathrm x + \mathrm y = C - \mathrm u^\mathrm z$，于是条件不独立（不一定相关，之前有说反例）。
 
 # 变分推断
 
