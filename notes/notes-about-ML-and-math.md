@@ -1219,11 +1219,11 @@ $$
 * 可以用**无标签的数据**以**自监督**方式进行训练，这意味着无需人工标注数据，可以直接使用互联网或其他地方的海量数据；
 * 可以并行化，利用 GPU 等设备来训练。
 
-Transformer 层输入一个数据矩阵 $\bm X$，并输出一个**形状相同**的矩阵 $\tilde{\bm X} = \operatorname{TransformerLayer}[\bm X]$。对于输入 $N$ 个 token，token 向量维数为 $D$ 的层，矩阵大小为 $N \times D$，第 $i$ 个 token 向量为 $\bm x^{(i)} = \bm X_{i, :}^\top$。
+Transformer 层输入一个数据矩阵 $\bm X$，并输出一个**形状相同**的矩阵 $\bm Y = \operatorname{TransformerLayer}[\bm X]$。对于输入 $N$ 个 token，token 向量维数为 $D$ 的层，有 $\bm X \in \mathbb R^{N \times D}$，第 $i$ 个 token 向量为 $\bm x^{(i)} = \bm X_{i, :}^\top$。
 
 token 向量所在的空间（嵌入空间）每个方向都有特定的语义。对于 NLP，需要先给出分词算法（得到 token 集合），然后给出一个神经网络，它需要训练出 token 和嵌入向量的映射，它不需要预训练，直接初始化参数同 Transformer 一块开始训练。
 
-可以叠加多个 Transformer 层（不共享参数）来让模型的内部表示更丰富。
+输入输出形状相同，于是可以叠加多个 Transformer 层（不共享参数）来让模型的内部表示更丰富。
 
 Transformer 层主要来说包含两个阶段：
 
@@ -1238,12 +1238,71 @@ Transformer 层主要来说包含两个阶段：
 
 这里的值是离散的，在 Transformer 中，我们为了方便梯度下架，需要避免这种称为硬注意力的离散化方法，而是使用让值变得连续（比如词嵌入向量就是连续的），方便梯度下降的软注意力方法。这时**模型原始的输出是个嵌入向量**，模型推理时，则需要找到所有 token 中嵌入离输出较近的那几个（这个根据嵌入找 token 的过程称为向量搜索）。
 
-一开始，我们想让输出向量 $\bm y^{(n)}$ 是输入 $\bm x^{(1)}, \dots, \bm x^{(n)}$ 的凸组合（这里的凸组合系数称为注意力系数）：
+一开始，我们想让输出向量 $\bm y^{(n)} = \bm Y_{n, :}$ 是输入 $\bm x^{(1)}, \dots, \bm x^{(n)}$ 的凸组合（这里的凸组合系数称为注意力系数）：
 
 $$
-\bm y^{(n)} = \sum_{i=1}^N A_{n,i} \bm x^{(i)}\\
-\sum_i A_{n,i} = 1\\
-\forall i, A_{n,i} \ge 0
+\bm y^{(n)} = \sum_{i=1}^N A_{n, i} \bm x^{(i)}\\
+\sum_i A_{n, i} = 1\\
+\forall i, A_{n, i} \ge 0
 $$
 
-直接把 $\bm A$ 当参数显然不好，我们
+凸组合目的是让 $\lVert \bm y^{(n)} \rVert$ 与 $N$ 解耦。
+
+直接把 $\bm A$ 当参数显然不合适，我们先不加参数，直接计算得到注意力系数。
+
+$A_{n, i}$ 衡量 $\bm x^{(i)}$ 的含义**对** $\bm x^{(n)}$ 的影响，我们先舍弃不对称性，并简单地让 $A_{n, i} = {\bm x^{(i)}}^\top \bm x^{(n)}$，省略约束条件，并变回数据矩阵的形式：
+
+$$
+\begin{aligned}
+\bm Y_{n, :} &= \sum_{i=1}^N A_{n, i} \bm x^{(i)}\\
+&= \sum_{i=1}^N \left({\bm x^{(i)}}^\top \bm x^{(n)}\right) \bm x^{(i)}\\
+&= \sum_{i=1}^N \left({\bm X_{i, :}} \bm X_{n, :}^\top\right) \bm X_{i, :}^\top\\
+\bm S &= \bm X \bm X^\top\\
+\bm Y &= \bm S \bm X
+\end{aligned}
+$$
+
+这里 $\bm A$ 每行都需要满足刚才的约束。我们对 $\bm S$ 每行都应用一个 softmax 函数：
+
+$$
+\bm A_{n, :} = \operatorname{softmax} \bm S_{n, :}\\
+\bm A = \operatorname*{Softmax}_\text{按行} \bm S \in \mathbb R^{N \times N}
+$$
+
+于是之前的公式就改成了简洁的矩阵乘法：
+
+$$
+\bm Y = \operatorname{Softmax}(\bm X \bm X^\top) \bm X
+$$
+
+这里使用 softmax 并没有概率上的意义，选 softmax 是因为它计算方便，还可以拉大系数间的差距。
+
+我们这里还没有可学习的参数。我们加入一个参数矩阵 $\bm U \in \mathbb R^{D \times D}$。我们把所有的 $\bm X$ 进行变换：
+
+$$
+\tilde{\bm X} = \bm X \bm U \in \mathbb R^{N \times D}\\
+\bm Y = \operatorname{Softmax}(\tilde{\bm X} \tilde{\bm X}^\top) \tilde{\bm X}
+$$
+
+之前我们说先舍弃不对称性，于是导致 $\tilde{\bm X} \tilde{\bm X}^\top$ 是对称矩阵，虽然有 softmax 破坏对称性，但我们更希望查询、键和值参数独立分工来让模型更灵活，顺便引入不对称性。
+
+现在公式有三个 $\tilde{\bm X}$，我们把它们变成不同的三个矩阵。给出三个参数：
+
+$$
+\bm W^{(q)} \in \mathbb R^{D \times D_q}\\
+\bm W^{(k)} \in \mathbb R^{D \times D_k}\\
+\bm W^{(v)} \in \mathbb R^{D \times D_v}
+$$
+
+式子变为：
+
+$$
+\bm Q = \bm X \bm W^{(q)} \in \mathbb R^{N \times D_q}\\
+\bm K = \bm X \bm W^{(k)} \in \mathbb R^{N \times D_k}\\
+\bm V = \bm X \bm W^{(v)} \in \mathbb R^{N \times D_v}\\
+\bm Y = \operatorname{Softmax}(\bm Q \bm K^\top) \bm V \in \mathbb R^{N \times D_v}
+$$
+
+为了能进行括号内的矩阵乘法，必须要有 $D_q = D_k$，如果要让输入输出形状相同，或者需要加上后面的残差连接，还需要 $D_v = D$。
+
+这里相当于用 $\bm W^{(q)}$、$\bm W^{(k)}$ 变换后的输入点积乘以用 $\bm W^{(v)}$ 变换后的输入。
