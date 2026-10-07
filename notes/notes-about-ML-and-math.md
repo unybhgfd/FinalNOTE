@@ -1238,6 +1238,10 @@ Transformer 层主要来说包含两个阶段：
 
 这里的值是离散的，在 Transformer 中，我们为了方便梯度下架，需要避免这种称为硬注意力的离散化方法，而是使用让值变得连续（比如词嵌入向量就是连续的），方便梯度下降的软注意力方法。这时**模型原始的输出是个嵌入向量**，模型推理时，则需要找到所有 token 中嵌入离输出较近的那几个（这个根据嵌入找 token 的过程称为向量搜索）。
 
+### 自注意力推导
+
+#### 注意力系数对称，无参数
+
 一开始，我们想让输出向量 $\bm y^{(n)} = \bm Y_{n, :}$ 是输入 $\bm x^{(1)}, \dots, \bm x^{(n)}$ 的凸组合（这里的凸组合系数称为注意力系数）：
 
 $$
@@ -1277,32 +1281,54 @@ $$
 
 这里使用 softmax 并没有概率上的意义，选 softmax 是因为它计算方便，还可以拉大系数间的差距。
 
-我们这里还没有可学习的参数。我们加入一个参数矩阵 $\bm U \in \mathbb R^{D \times D}$。我们把所有的 $\bm X$ 进行变换：
+#### 加入参数
+
+我们这里还没有可学习的参数。我们加入一个参数矩阵 $\bm U \in \mathbb R^{D \times D}$。我们把所有的输入向量进行变换后再计算点积：
 
 $$
 \tilde{\bm X} = \bm X \bm U \in \mathbb R^{N \times D}\\
 \bm Y = \operatorname{Softmax}(\tilde{\bm X} \tilde{\bm X}^\top) \tilde{\bm X}
 $$
 
+#### 引入 Q、K、V
+
 之前我们说先舍弃不对称性，于是导致 $\tilde{\bm X} \tilde{\bm X}^\top$ 是对称矩阵，虽然有 softmax 破坏对称性，但我们更希望查询、键和值参数独立分工来让模型更灵活，顺便引入不对称性。
 
 现在公式有三个 $\tilde{\bm X}$，我们把它们变成不同的三个矩阵。给出三个参数：
 
 $$
-\bm W^{(q)} \in \mathbb R^{D \times D_q}\\
-\bm W^{(k)} \in \mathbb R^{D \times D_k}\\
-\bm W^{(v)} \in \mathbb R^{D \times D_v}
+\bm W^q \in \mathbb R^{D \times D_q}\\
+\bm W^k \in \mathbb R^{D \times D_k}\\
+\bm W^v \in \mathbb R^{D \times D_v}
 $$
 
 式子变为：
 
 $$
-\bm Q = \bm X \bm W^{(q)} \in \mathbb R^{N \times D_q}\\
-\bm K = \bm X \bm W^{(k)} \in \mathbb R^{N \times D_k}\\
-\bm V = \bm X \bm W^{(v)} \in \mathbb R^{N \times D_v}\\
+\bm Q = \bm X \bm W^q \in \mathbb R^{N \times D_q}\\
+\bm K = \bm X \bm W^k \in \mathbb R^{N \times D_k}\\
+\bm V = \bm X \bm W^v \in \mathbb R^{N \times D_v}\\
 \bm Y = \operatorname{Softmax}(\bm Q \bm K^\top) \bm V \in \mathbb R^{N \times D_v}
 $$
 
 为了能进行括号内的矩阵乘法，必须要有 $D_q = D_k$，如果要让输入输出形状相同，或者需要加上后面的残差连接，还需要 $D_v = D$。
 
-这里相当于用 $\bm W^{(q)}$、$\bm W^{(k)}$ 变换后的输入点积乘以用 $\bm W^{(v)}$ 变换后的输入。
+这里相当于用 $\bm W^q$、$\bm W^k$ 变换后的输入点积乘以用 $\bm W^v$ 变换后的输入。
+
+GPT-3 中，$D_q$ 比 $D$ 小很多，$D = D_v = 12288$，$D_q = D_k = 128$。并且为了减少参数量，把 $\bm W_v$ 拆成了 $12288 \times 128$ 的矩阵和 $128 \times 12288$ 的矩阵相乘。
+
+#### 注意力系数的方差问题
+
+将查询参数矩阵视作随机变量 $\mathbf W^q$。第 $i$ 个输入向量 $\bm x^{(i)}$ 经过 $\mathbf W^q$ 变换后的向量（$\bm Q$ 的其中一行或是一列）记为 $\mathbf q^{(i)} = {\mathbf W^q}^\top \bm x^{(i)}$，同样的方式定义 $\mathbf k^{(j)} = {\mathbf W^k}^\top \bm x^{(j)}$。那么 $\bm x^{(j)}$ 对于 $\bm x^{(i)}$ 的注意力系数就是 $\mathbf s = {\mathbf q^{(i)}}^\top {\mathbf k^{(j)}}$。
+
+对于 $\mathbf W^q$ 和 $\mathbf W^k$，我们对其中每个元素（实数的随机变量），假设它们**相互独立，期望为零，方差都设为** $\sigma^2$。
+
+$$
+\begin{aligned}
+\mathbb E[\mathbf q^{(i)}_m] &= \sum_{a=1}^{D_q} \mathbb E[\mathbf W^q_{a,m} \bm x_a] && \text{(根据定义)}\\
+&= \sum_{a=1}^{D_q} \mathbb E[\mathbf W^q_{a,m}] \bm x_a && \text{(常数移出括号)}\\
+&= 0 && \text{(期望为零带入)}\\
+\ \\
+\operatorname{Var}(\mathbf q^{(i)}_m) &= \mathbb E[(\mathbf q^{(i)}_m)^2] && \text{(期望为零)}\\
+\end{aligned}
+$$
