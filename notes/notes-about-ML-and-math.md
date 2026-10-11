@@ -1315,20 +1315,8 @@ $$
 
 这里相当于用 $\bm W^q$、$\bm W^k$ 变换后的输入点积乘以用 $\bm W^v$ 变换后的输入。
 
-GPT-3 中，$D_q$ 比 $D$ 小很多，$D = D_v = 12288$，$D_q = D_k = 128$。并且为了减少参数量，把 $\bm W_v$ 拆成了 $12288 \times 128$ 的矩阵和 $128 \times 12288$ 的矩阵相乘。
+GPT-3 中，$D_k$ 比 $D$ 小很多，$D = D_v = 12288$，$D_q = D_k = 128$。并且为了减少参数量，把 $\bm W_v$ 拆成了 $12288 \times 128$ 的矩阵和 $128 \times 12288$ 的矩阵相乘。
 
 #### 注意力系数的方差问题
 
-将查询参数矩阵视作随机变量 $\mathbf W^q$。第 $i$ 个输入向量 $\bm x^{(i)}$ 经过 $\mathbf W^q$ 变换后的向量（$\bm Q$ 的其中一行或是一列）记为 $\mathbf q^{(i)} = {\mathbf W^q}^\top \bm x^{(i)}$，同样的方式定义 $\mathbf k^{(j)} = {\mathbf W^k}^\top \bm x^{(j)}$。那么 $\bm x^{(j)}$ 对于 $\bm x^{(i)}$ 的注意力系数就是 $\mathbf s = {\mathbf q^{(i)}}^\top {\mathbf k^{(j)}}$。
-
-对于 $\mathbf W^q$ 和 $\mathbf W^k$，我们对其中每个元素（实数的随机变量），假设它们**相互独立，期望为零，方差都设为** $\sigma^2$。
-
-$$
-\begin{aligned}
-\mathbb E[\mathbf q^{(i)}_m] &= \sum_{a=1}^{D_q} \mathbb E[\mathbf W^q_{a,m} \bm x_a] && \text{(根据定义)}\\
-&= \sum_{a=1}^{D_q} \mathbb E[\mathbf W^q_{a,m}] \bm x_a && \text{(常数移出括号)}\\
-&= 0 && \text{(期望为零带入)}\\
-\ \\
-\operatorname{Var}(\mathbf q^{(i)}_m) &= \mathbb E[(\mathbf q^{(i)}_m)^2] && \text{(期望为零)}\\
-\end{aligned}
-$$
+推导见 [另一个文件](scaled-self-attention-var.md)。
