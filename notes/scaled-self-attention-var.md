@@ -38,7 +38,7 @@ $$
 > 给出随机变量 $\mathrm a$ 和 $\mathrm b$，根据协方差定义，有：
 >
 > $$
-\operatorname{Cov}(\mathrm a, b) = \mathbb E[\mathrm a \mathrm b] - \mathbb E[\mathrm a] \cdot \mathbb E[\mathrm b]
+\operatorname{Cov}(\mathrm a, \mathrm b) = \mathbb E[\mathrm a \mathrm b] - \mathbb E[\mathrm a] \cdot \mathbb E[\mathrm b]
 > $$
 >
 > 所以当两者独立（协方差始终为零）时，$\mathbb E[\mathrm a \mathrm b] = \mathbb E[\mathrm a] \cdot \mathbb E[\mathrm b]$。
@@ -65,7 +65,7 @@ $$
 &= \sum_{a=1}^D X_{i, a}^2 \operatorname{Var}(\mathrm W^q_{a, j}) + \mathbb E[\mathrm W^q_{a, j}]^2 && \text{(拆分平方的期望)}\\
 &= \sum_{a=1}^D X_{i, a}^2 \sigma^2\\
 &= \sigma^2 \sum_{a=1}^D X_{i, a}^2\\
-&= \sigma^2 \bm X_{i, :}^\top \bm X_{i, :}
+&= \sigma^2 \lVert\bm X_{i, :}\rVert^2
 \end{aligned}
 $$
 
@@ -86,7 +86,7 @@ $$
 $$
 \begin{aligned}
 \mathbb E[\mathrm S_{i, j}] &= \sum_{a=1}^{D_k} \mathbb E[\mathrm Q_{i, a} \mathrm K_{j, a}]\\
-&= \sum_{a=1}^{D_k} \mathbb E[\mathrm Q_{i, a}] \cdot \mathbb E[\mathrm K_{j, a}] && \text{(根据独立性)}\\
+&= \sum_{a=1}^{D_k} \mathbb E[\mathrm Q_{i, a}] \, \mathbb E[\mathrm K_{j, a}] && \text{(根据独立性)}\\
 &= 0 && \text{(已证期望为零)}
 \end{aligned}
 $$
@@ -96,7 +96,9 @@ $$
 $$
 \begin{aligned}
 \operatorname{Var}(\mathrm S_{i, j}) &= \mathbb E[\mathrm S_{i, j}^2] && \text{(期望为零)}\\
-&= \sum_{a=1}^{D_k} \sum_{b=1}^{D_k} \mathbb E[\mathrm Q_{i, a} \mathrm Q_{i, b} \mathrm K_{j, a} \mathrm K_{j, b}]\\
-&= \sum_{a=1}^{D_k} \sum_{b=1}^{D_k} \mathbb E[\mathrm Q_{i, a} \mathrm Q_{i, b}]\, \mathbb E[\mathrm K_{j, a} \mathrm K_{j, b}]
+&= \sum_{a=1}^{D_k} \mathbb E[(\mathrm Q_{i, a} \mathrm K_{j, a})^2]\\
+&= \sum_{a=1}^{D_k} \mathbb E[\mathrm Q_{i, a}^2]\, \mathbb E[\mathrm K_{j, a}^2] && \text{(独立性)}\\
+&= \sum_{a=1}^{D_k} \sigma^2 \lVert\bm X_{i, :}\rVert^2 \cdot \sigma^2 \lVert\bm X_{j, :}\rVert^2 && \text{(方差带入)}\\
+&= D_k \sigma^4 \lVert\bm X_{i, :}\rVert^2 \lVert\bm X_{j, :}\rVert^2 && \text{(拆开求和)}
 \end{aligned}
 $$

@@ -1319,4 +1319,11 @@ GPT-3 中，$D_k$ 比 $D$ 小很多，$D = D_v = 12288$，$D_q = D_k = 128$。�
 
 #### 注意力系数的方差问题
 
-推导见 [另一个文件](scaled-self-attention-var.md)。
+> 完整推导见 [另一个文件](scaled-self-attention-var.md)
+
+由于方差包含 $D_k$，需要把它去掉，否则会导致 softmax 饱和（输出接近独热向量），所以我们乘上一个系数让它方差里的 $D_k$ 系数消失：
+
+$$
+\operatorname{Attention}(\bm Q, \bm K, \bm V) \overset{\text{def}}= \operatorname{Softmax}(\frac{\bm Q \bm K^\top}{\sqrt{D_k}}) \bm V\\
+\bm Y = \operatorname{Attension}(\bm Q, \bm K, \bm V)
+$$
