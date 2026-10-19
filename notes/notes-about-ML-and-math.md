@@ -1315,7 +1315,7 @@ $$
 
 这里相当于用 $\bm W^q$、$\bm W^k$ 变换后的输入点积乘以用 $\bm W^v$ 变换后的输入。
 
-GPT-3 中，$D_k$ 比 $D$ 小很多，$D = D_v = 12288$，$D_q = D_k = 128$。并且为了减少参数量，把 $\bm W_v$ 拆成了 $12288 \times 128$ 的矩阵和 $128 \times 12288$ 的矩阵相乘。
+GPT-3 中，$D_k$ 比 $D$ 小很多，$D = D_v = 12288$，$D_q = D_k = 128$。
 
 #### 注意力系数的方差问题
 
@@ -1325,5 +1325,13 @@ GPT-3 中，$D_k$ 比 $D$ 小很多，$D = D_v = 12288$，$D_q = D_k = 128$。�
 
 $$
 \operatorname{Attention}(\bm Q, \bm K, \bm V) \overset{\text{def}}= \operatorname{Softmax}(\frac{\bm Q \bm K^\top}{\sqrt{D_k}}) \bm V\\
-\bm Y = \operatorname{Attension}(\bm Q, \bm K, \bm V)
+\bm Y = \operatorname{Attention}(\bm Q, \bm K, \bm V)
+$$
+
+### 多头注意力
+
+为了增强模型的表达能力，我们想让一个自注意层（注意力头）只学习一种模式，使用 $H$ 个注意力头，第 $i$ 个头有自己的参数，我们对每个头计算 $\text{head}_i = \operatorname{Attention}(\bm Q^{(i)})$，然后按行合并所有头的输出，再乘一个 $(HD_v) \times D$ 的矩阵 $\bm W^o$：
+
+$$
+\bm Y(\bm X) = \operatorname*{Concat}_\text{按行}(\text{head}_1, \dots, \text{head}_H) \bm W^o
 $$
