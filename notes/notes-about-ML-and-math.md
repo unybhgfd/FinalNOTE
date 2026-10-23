@@ -1311,7 +1311,7 @@ $$
 \bm Y = \operatorname{Softmax}(\bm Q \bm K^\top) \bm V \in \mathbb R^{N \times D_v}
 $$
 
-为了能进行括号内的矩阵乘法，必须要有 $D_q = D_k$，如果要让输入输出形状相同，或者需要加上后面的残差连接，还需要 $D_v = D$。
+为了能进行括号内的矩阵乘法，必须要有 $D_q = D_k$。
 
 这里相当于用 $\bm W^q$、$\bm W^k$ 变换后的输入点积乘以用 $\bm W^v$ 变换后的输入。
 
@@ -1330,8 +1330,36 @@ $$
 
 ### 多头注意力
 
-为了增强模型的表达能力，我们想让一个自注意层（注意力头）只学习一种模式，使用 $H$ 个注意力头，第 $i$ 个头有自己的参数，我们对每个头计算 $\text{head}_i = \operatorname{Attention}(\bm Q^{(i)})$，然后按行合并所有头的输出，再乘一个 $(HD_v) \times D$ 的矩阵 $\bm W^o$：
+为了增强模型的表达能力，我们想让一个自注意层（注意力头）只学习一种模式，使用 $H$ 个注意力头，第 $i$ 个头有自己的参数，我们对每个头计算 $\text{head}_i = \operatorname{Attention}(\bm Q^{(i)}, \bm K^{(i)}, \bm V^{(i)})$，然后按行合并所有头的输出，再乘一个 $(HD_v) \times D$ 的矩阵 $\bm W^o$：
 
 $$
-\bm Y(\bm X) = \operatorname*{Concat}_\text{按行}(\text{head}_1, \dots, \text{head}_H) \bm W^o
+\operatorname{MultiHead}(\bm X) \overset{\text{def}}= \operatorname*{Concat}_\text{按行}(\text{head}_1, \dots, \text{head}_H) \bm W^o
 $$
+
+### 残差、归一化和前馈层
+
+残差网络能够轻松学到恒等映射，让训练更容易。这一步，将多头注意力的输出加上原始输入，然后进行层归一化：
+
+$$
+\bm Z = \operatorname{LayerNorm}(\bm X + \operatorname{MultiHead}(\bm X))
+$$
+
+这种形式叫 Post-Norm，下面的是 Pre-Norm（预归一化）形式：
+
+$$
+\bm Z = \bm X + \operatorname{LayerNorm}(\operatorname{MultiHead}(\bm X))
+$$
+
+最后一步我们把 $\bm Z$ 输入进一个多层感知机：
+
+$$
+\text{Linear} \to \text{ReLU} \to \text{Linear}
+$$
+
+即
+
+$$
+\operatorname{FFN}(\bm x) = \max_\text{逐元素}(0, \bm x \bm W_1 + \bm b_1) \bm W_2 + \bm b_2
+$$
+
+其中第一个（括号内的）线性变换将 $D$ 维输入向量变为 $D_\text{ff}$（GPT-3 中 $D_\text{ff} = 4 \cdot D$），另一个线性变换将向量维度又变为 $D$。
