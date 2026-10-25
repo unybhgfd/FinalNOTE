@@ -1371,7 +1371,7 @@ $$
 即
 
 $$
-\operatorname{FFN}(\bm x) = \max_\text{逐元素}(0, \bm x \bm W_1 + \bm b_1) \bm W_2 + \bm b_2
+\operatorname{FFN}(\bm x) = \max_\text{逐元素}(0, \bm x \bm W^{(1)} + \bm b^{(1)}) \bm W^{(2)} + \bm b^{(2)}
 $$
 
 其中第一个（括号内的）线性变换将 $D$ 维输入向量变为 $D_\text{ff}$（GPT-3 中 $D_\text{ff} = 4 \cdot D$），另一个线性变换将向量维度又变为 $D$。
