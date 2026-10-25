@@ -243,10 +243,19 @@ $$
 
 ## 交叉熵
 
-对于事件 $X=x$（$x$ 所有可能的取值集合为 $\mathcal{X}$），我们有这个事件的真实概率（或者说真实的分布函数）$p(x)$ 和模型预测的概率$q(x)$，它们的交叉熵定义为：
+对于事件 $\mathrm X = x$（$x$ 所有可能的取值集合为 $\mathcal{X}$），我们有这个事件的真实概率（或者说真实的分布函数）$p(x)$ 和模型预测的概率$q(x)$，它们的交叉熵定义为：
 
 $$
 H(p, q) = -\sum_{x \in \mathcal{X}} p(x) \cdot \log q(x)
+$$
+
+深度学习的交叉熵损失看起来只是负对数的样子，但代价函数展开来就是交叉熵的形式。
+
+对数据集中（分布 $\hat p_\text{data}$ 中采样）的样本 $(\bm x_i, y_i)$，我们对这个样本构建经验分布 $p_i(y) = \bm 1_{y = y_i}$，模型预测这个样本的概率记为 $q(y_i \mid \bm x_i)$，那么交叉熵就是：
+
+$$
+H(p_i, q(\cdot \mid \bm x_i)) = -\frac{1}{N} \sum_y p_i(y) \cdot \log q(y \mid \bm x_i)\\
+= -\log q(y_i \mid \bm x_i)
 $$
 
 ## KL散度
@@ -321,8 +330,9 @@ $$
 $$
 = \argmax_{\bm{\theta}} \log\left(
    \prod_{i=1}^{m} p_\text{model}(\bm{x}^{(i)}; \bm{\theta})
-\right)
-= \argmax_{\bm{\theta}} \sum_{i=1}^{m} \log p_\text{model}(\bm{x}^{(i)}; \bm{\theta})
+\right)\\
+= \argmax_{\bm{\theta}} \sum_{i=1}^{m} \log p_\text{model}(\bm{x}^{(i)}; \bm{\theta})\\
+= \argmin_{\bm{\theta}} \underbrace{-\sum_{i=1}^{m} \log p_\text{model}(\bm{x}^{(i)}; \bm{\theta})}_\text{负对数似然}
 $$
 
 模型选择很重要，因为 MLE 只最大化训练样本的似然，并不直接约束模型对训练集外数据的预测。如果模型过于灵活，它很可能将训练集中未出现（但真实概率非零）的区域的概率推向 0，导致泛化能力弱。
@@ -1219,7 +1229,7 @@ $$
 * 可以用**无标签的数据**以**自监督**方式进行训练，这意味着无需人工标注数据，可以直接使用互联网或其他地方的海量数据；
 * 可以并行化，利用 GPU 等设备来训练。
 
-Transformer 层输入一个数据矩阵 $\bm X$，并输出一个**形状相同**的矩阵 $\bm Y = \operatorname{TransformerLayer}[\bm X]$。对于输入 $N$ 个 token，token 向量维数为 $D$ 的层，有 $\bm X \in \mathbb R^{N \times D}$，第 $i$ 个 token 向量为 $\bm x^{(i)} = \bm X_{i, :}^\top$。
+Transformer 层输入一个数据矩阵 $\bm X$，并输出一个**形状相同**的矩阵 $\bm Y = \operatorname{TransformerLayer}[\bm X]$。对于输入 $N$ 个 token，token 向量维数为 $D$（`d_model`）的层，有 $\bm X \in \mathbb R^{N \times D}$，第 $i$ 个 token 向量为 $\bm x^{(i)} = \bm X_{i, :}^\top$。
 
 token 向量所在的空间（嵌入空间）每个方向都有特定的语义。对于 NLP，需要先给出分词算法（得到 token 集合），然后给出一个神经网络，它需要训练出 token 和嵌入向量的映射，它不需要预训练，直接初始化参数同 Transformer 一块开始训练。
 
@@ -1321,7 +1331,7 @@ $$
 
 > 完整推导见 [另一个文件](scaled-self-attention-var.md)
 
-由于方差包含 $D_k$，需要把它去掉，否则会导致 softmax 饱和（输出接近独热向量），所以我们乘上一个系数让它方差里的 $D_k$ 系数消失：
+由于方差包含 $D_k$，需要把它去掉，否则会导致 softmax 饱和（输出接近独热向量），所以我们乘上一个系数让它方差里的 $D_k$ 系数消失，得到自注意力的最终形式：
 
 $$
 \operatorname{Attention}(\bm Q, \bm K, \bm V) \overset{\text{def}}= \operatorname{Softmax}(\frac{\bm Q \bm K^\top}{\sqrt{D_k}}) \bm V\\
@@ -1336,9 +1346,9 @@ $$
 \operatorname{MultiHead}(\bm X) \overset{\text{def}}= \operatorname*{Concat}_\text{按行}(\text{head}_1, \dots, \text{head}_H) \bm W^o
 $$
 
-### 残差、归一化和前馈层
+## 残差、归一化和前馈层
 
-残差网络能够轻松学到恒等映射，让训练更容易。这一步，将多头注意力的输出加上原始输入，然后进行层归一化：
+残差网络能够轻松学到恒等映射，让训练更容易。Transformer 层中将多头注意力的输出加上原始输入，然后进行层归一化：
 
 $$
 \bm Z = \operatorname{LayerNorm}(\bm X + \operatorname{MultiHead}(\bm X))
@@ -1350,7 +1360,9 @@ $$
 \bm Z = \bm X + \operatorname{LayerNorm}(\operatorname{MultiHead}(\bm X))
 $$
 
-最后一步我们把 $\bm Z$ 输入进一个多层感知机：
+后者更加稳定，因为把前馈层的输入进行了归一化。
+
+把 $\bm Z \in \mathbb R^{N \times D}$ 的每行用一个多层感知机变换：
 
 $$
 \text{Linear} \to \text{ReLU} \to \text{Linear}
@@ -1363,3 +1375,9 @@ $$
 $$
 
 其中第一个（括号内的）线性变换将 $D$ 维输入向量变为 $D_\text{ff}$（GPT-3 中 $D_\text{ff} = 4 \cdot D$），另一个线性变换将向量维度又变为 $D$。
+
+最后一步再进行残差和归一化（这里是 Post-Norm）：
+
+$$
+\tilde{\bm X} = \operatorname{LayerNorm}(\bm Z + \operatorname*{FFN}_\text{对每行}(\bm Z))
+$$
