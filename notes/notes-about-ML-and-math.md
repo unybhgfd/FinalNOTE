@@ -1381,3 +1381,36 @@ $$
 $$
 \tilde{\bm X} = \operatorname{LayerNorm}(\bm Z + \operatorname*{FFN}_\text{对每行}(\bm Z))
 $$
+
+可以把上面的两个层归一化换成 RMSNorm（均方根归一化），在减少计算量和参数量的情况下效果与层归一化相当。
+
+### 层归一化和 RMSNorm 的过程
+
+层归一化 $\operatorname{LayerNorm}: \mathbb R^{N \times D} \to \mathbb R^{N \times D}$ 计算每个特征维度的均值方差：
+
+$$
+\begin{aligned}
+& \bm\mu = \frac 1 D \sum_{i=1}^D \bm X_{i, :}\\
+& \sigma_i = \sqrt{\delta + \frac 1 D \sum_{j=1}^D (X_{j, i} - \mu_i)^2}\\
+& \bm X' = \frac{\bm X - \bm\mu}{\bm\sigma}\\
+& \bm\gamma, \bm\beta \in \mathbb R^{D}\\
+& \operatorname{LayerNorm}(x) = \bm\gamma \odot \bm X' + \bm\beta
+\end{aligned}
+$$
+
+其中参数是 $\bm\gamma$ 和 $\bm\beta$，对不同特征维度进行不同缩放，通常初始化为 $\bm\gamma = \bm1$，$\bm\beta = \bm0$。最后一行发生了广播。
+
+RMSNorm 去掉了其中的 $\bm\beta$ 参数，只有缩放：
+
+$$
+\begin{aligned}
+\operatorname{RMS}(\bm X)_i = \sqrt{\delta + \frac 1 D \sum_{j=1}^D X_{j, i}^2}\\
+\operatorname{RMSNorm}(\bm X) = \bm\gamma \frac{\bm X}{\operatorname{RMS}(\bm X)} && \text{(广播，除法逐元素)}
+\end{aligned}
+$$
+
+### 为什么是 RMSNorm？
+
+先说为什么不是批归一化：它没有意义，训练时输入的张量形状是 `(batch_size, sequence_length, d_model)`，训练时的输入中输入每个序列一般不是同一个句子，不同句子的同一位置的分布显然大概率是不同的。
+
+由于 Transformer 层堆叠多个，根据链式法则，梯度里会出现一长串的相乘：<!-- TODO: -->
