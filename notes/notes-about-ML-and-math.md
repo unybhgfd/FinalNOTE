@@ -1360,7 +1360,7 @@ $$
 \bm Z = \bm X + \operatorname{LayerNorm}(\operatorname{MultiHead}(\bm X))
 $$
 
-后者更加稳定，因为把前馈层的输入进行了归一化。
+后者更加稳定，因为把前馈层的输入进行了归一化。同时，因为没有改变 $\bm x$ 项，从而让雅可比变成 $\bm I + \dots$ 的连乘从而方便训练。
 
 把 $\bm Z \in \mathbb R^{N \times D}$ 的每行用一个多层感知机变换：
 
@@ -1393,19 +1393,19 @@ $$
 & \bm\mu = \frac 1 D \sum_{i=1}^D \bm X_{i, :}\\
 & \sigma_i = \sqrt{\delta + \frac 1 D \sum_{j=1}^D (X_{j, i} - \mu_i)^2}\\
 & \bm X' = \frac{\bm X - \bm\mu}{\bm\sigma}\\
-& \bm\gamma, \bm\beta \in \mathbb R^{D}\\
+& \bm\gamma, \bm\beta \in \mathbb R^{D} \quad \text{(BatchNorm 中这里是标量)}\\
 & \operatorname{LayerNorm}(x) = \bm\gamma \odot \bm X' + \bm\beta
 \end{aligned}
 $$
 
 其中参数是 $\bm\gamma$ 和 $\bm\beta$，对不同特征维度进行不同缩放，通常初始化为 $\bm\gamma = \bm1$，$\bm\beta = \bm0$。最后一行发生了广播。
 
-RMSNorm 去掉了其中的 $\bm\beta$ 参数，只有缩放：
+RMSNorm 去掉了其中的平移操作，只留下缩放：
 
 $$
 \begin{aligned}
-\operatorname{RMS}(\bm X)_i = \sqrt{\delta + \frac 1 D \sum_{j=1}^D X_{j, i}^2}\\
-\operatorname{RMSNorm}(\bm X) = \bm\gamma \frac{\bm X}{\operatorname{RMS}(\bm X)} && \text{(广播，除法逐元素)}
+& \operatorname{RMS}(\bm X)_i = \sqrt{\delta + \frac 1 D \sum_{j=1}^D X_{j, i}^2}\\
+& \operatorname{RMSNorm}(\bm X) = \bm\gamma \frac{\bm X}{\operatorname{RMS}(\bm X)} && \text{(广播，除法逐元素)}
 \end{aligned}
 $$
 
@@ -1413,4 +1413,4 @@ $$
 
 先说为什么不是批归一化：它没有意义，训练时输入的张量形状是 `(batch_size, sequence_length, d_model)`，训练时的输入中输入每个序列一般不是同一个句子，不同句子的同一位置的分布显然大概率是不同的。
 
-由于 Transformer 层堆叠多个，根据链式法则，梯度里会出现一长串的相乘：<!-- TODO: -->
+而残差流 $\bm X + \bm F(\bm X)$ 让注意力和前馈层只需学习加在 $\bm X$ 上的增量，所以均值相对稳定，不是很有必要处理均值。
