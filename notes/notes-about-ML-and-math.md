@@ -1354,7 +1354,7 @@ $$
 \bm Z = \operatorname{LayerNorm}(\bm X + \operatorname{MultiHead}(\bm X))
 $$
 
-这种形式叫 Post-Norm，下面的是 Pre-Norm（预归一化）形式：
+这种形式叫 Post-Norm，下面的是现在更常用的 Pre-Norm（预归一化）形式：
 
 $$
 \bm Z = \bm X + \operatorname{LayerNorm}(\operatorname{MultiHead}(\bm X))
@@ -1376,7 +1376,7 @@ $$
 
 其中第一个（括号内的）线性变换将 $D$ 维输入向量变为 $D_\text{ff}$（GPT-3 中 $D_\text{ff} = 4 \cdot D$），另一个线性变换将向量维度又变为 $D$。
 
-最后一步再进行残差和归一化（这里是 Post-Norm）：
+最后一步再进行残差和归一化，得到最终结果（这里是 Post-Norm）：
 
 $$
 \tilde{\bm X} = \operatorname{LayerNorm}(\bm Z + \operatorname*{FFN}_\text{对每行}(\bm Z))
@@ -1393,7 +1393,7 @@ $$
 & \bm\mu = \frac 1 D \sum_{i=1}^D \bm X_{i, :}\\
 & \sigma_i = \sqrt{\delta + \frac 1 D \sum_{j=1}^D (X_{j, i} - \mu_i)^2}\\
 & \bm X' = \frac{\bm X - \bm\mu}{\bm\sigma}\\
-& \bm\gamma, \bm\beta \in \mathbb R^{D} \quad \text{(BatchNorm 中这里是标量)}\\
+& \bm\gamma, \bm\beta \in \mathbb R^{D}\\
 & \operatorname{LayerNorm}(x) = \bm\gamma \odot \bm X' + \bm\beta
 \end{aligned}
 $$
@@ -1411,6 +1411,35 @@ $$
 
 ### 为什么是 RMSNorm？
 
-先说为什么不是批归一化：它没有意义，训练时输入的张量形状是 `(batch_size, sequence_length, d_model)`，训练时的输入中输入每个序列一般不是同一个句子，不同句子的同一位置的分布显然大概率是不同的。
+先说为什么不是批归一化：它没有意义。训练时输入的张量形状是 `(batch_size, sequence_length, d_model)`，训练时的输入中输入每个序列一般不是同一个句子，不同句子的同一位置的分布显然大概率是不同的，所以批归一化的求和方向没有意义。
 
 而残差流 $\bm X + \bm F(\bm X)$ 让注意力和前馈层只需学习加在 $\bm X$ 上的增量，所以均值相对稳定，不是很有必要处理均值。
+
+## 纯解码 Transformer（GPT）
+
+输入前 $n-1$ 个 token，预测第 $n$ 个 token，或者说预测条件概率 $p(\bm x^{(n)} \mid \bm x^{(1)}, \dots, \bm x^{(n-1)})$ 然后采样。
+
+GPT 就是通过这种方法自回归地生成句子，也就是常说的 predict next token 模式。
+
+结构：
+
+1. 将输入的 token 序列查表（或者说词嵌入矩阵 $\bm E \in \mathbb R^{V \times D}$ 乘上 token 的独热向量，词嵌入矩阵作为参数参与训练）得到嵌入矩阵 $\bm X \in \mathbb R^{N \times D}$。
+2. 计算位置编码矩阵 $\bm P$，然后直接加到嵌入矩阵。
+3. 输入进堆叠了 $L$ 层的 Transformer 层，其中多头注意力带因果掩码。
+4. 输入进 LM-head（语言模型头），这是一个线性层，对上一步的输出 $\tilde{\bm X}$ 每行都进行操作 $\bm x \mapsto \bm W_\text{lm} \bm x + \bm b_\text{lm} \in \mathbb R^V$，得到 logits 矩阵。一般这里有参数共享 $\bm W_\text{lm} = \bm E$，可以再对每行 softmax 得到概率分布。
+
+我们在训练时想让位置 $i$ 关注它前面的所有嵌入，然后来预测 $i+1$ 个 token 的嵌入。这样对输入的单个样本，可以同时学习所有位置的下个 token 的条件概率分布。
+
+在推理时，上面第四步 logits 矩阵的最后一行作为下一个 token 的分布预测。
+
+为了让首个嵌入也能训练，我们往词表加入名为 `BOF`（begin of sequence，或者叫 `<start>`）的特殊 token。于是训练时，输入是 $(\text{BOF}, \bm x^{(1)}, \dots, \bm x^{(N-1)})$，期望的输出为 $(\bm x^{(1)}, \dots, \bm x^{(N)})$，这就是 RNN 中的导师驱动过程。
+
+![因果掩码](imgs/attention-mask.png)
+
+因果掩码将方阵 $\bm A = \bm Q \bm K^\top$ 的上三角部分（图中黑色部分）设为 $-\infin$ 来实现只关注前面的嵌入向量。由于要将 $\bm A$ 每行 softmax，因为 $\exp(-\infin) = 0$，所以这相当于只对当前位置前面的注意力系数进行 softmax。于是得到带因果掩码的自注意力：
+
+$$
+\operatorname*{Attention}_\text{masked}(\bm Q, \bm K, \bm V) = \operatorname{Softmax}(\frac{\bm Q \bm K^\top}{\sqrt{D_k}} + \bm M) \bm V\\
+$$
+
+其中 $\bm M$ 上三角部分为 $-\infin$，其余元素为 $0$。
