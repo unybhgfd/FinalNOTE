@@ -279,7 +279,7 @@ $$
 
 $$
 \bm A_{n, :} = \operatorname{softmax} \bm S_{n, :}\\
-\bm A = \operatorname*{Softmax}_\text{按行} \bm S \in \mathbb R^{N \times N}
+\bm A = \operatorname*{Softmax}_\text{对每行} \bm S \in \mathbb R^{N \times N}
 $$
 
 于是之前的公式就改成了简洁的矩阵乘法：
@@ -333,7 +333,7 @@ $$
 由于方差包含 $D_k$，需要把它去掉，否则会导致 softmax 饱和（输出接近独热向量），所以我们乘上一个系数让它方差里的 $D_k$ 系数消失，得到自注意力的最终形式：
 
 $$
-\operatorname{Attention}(\bm Q, \bm K, \bm V) \overset{\text{def}}= \operatorname{Softmax}(\frac{\bm Q \bm K^\top}{\sqrt{D_k}}) \bm V\\
+\operatorname{Attention}(\bm Q, \bm K, \bm V) \overset{\text{def}}= \operatorname*{Softmax}_\text{对每行}(\frac{\bm Q \bm K^\top}{\sqrt{D_k}}) \bm V\\
 \bm Y = \operatorname{Attention}(\bm Q, \bm K, \bm V)
 $$
 
@@ -423,7 +423,7 @@ GPT 等 LLM 就是通过这种方法自回归地生成句子，也就是常说�
 结构：
 
 1. 将输入的 token 序列查表（或者说词嵌入矩阵 $\bm E \in \mathbb R^{V \times D}$ 乘上 token 的独热向量，词嵌入矩阵作为参数参与训练）得到嵌入矩阵 $\bm X \in \mathbb R^{N \times D}$。
-2. 计算位置编码矩阵 $\bm P$，然后直接与嵌入矩阵相加。
+2. 位置编码。
 3. 输入进堆叠了 $L$ 层的 Transformer 层，其中多头注意力带因果掩码。
 4. 一个 RMSNorm 层。
 5. 输入进 LM-head（语言模型头），这是一个线性层，对上一步的输出 $\tilde{\bm X}$ 每行都进行操作 $\bm x \mapsto \bm W_\text{lm} \bm x + \bm b_\text{lm} \in \mathbb R^V$，得到 logits 矩阵。一般这里有参数共享 $\bm W_\text{lm} = \bm E$，可以再对每行 softmax 得到概率分布。
@@ -445,3 +445,20 @@ $$
 其中 $\bm M$ 上三角部分为 $-\infin$，其余元素为 $0$。
 
 > **待补充**: `PAD` token
+
+# 位置编码
+
+Transformer 层对 token 序列排列等变，所以我们把输入进行位置编码来引入顺序信息。
+
+## *Attention Is All You Need* 中的位置编码
+
+原文的位置编码计算矩阵 $\bm P \in \mathbb R^{N \times D}$ 并加到输入 $\bm X$ 上（逐元素相加）得到结果 $\tilde{\bm X} = \bm X + \bm P$。
+
+我们定义
+
+$$
+\begin{cases}
+P_{t, 2i} &= \sin(t/L^{2i/D}) & \text{(即当特征维度索引是偶数)}\\
+P_{t, 2i+1} &= \cos(t/L^{2i/D}) & \text{(即当特征维度索引是奇数)}
+\end{cases}
+$$
