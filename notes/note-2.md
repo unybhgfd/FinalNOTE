@@ -436,7 +436,7 @@ GPT 等 LLM 就是通过这种方法自回归地生成句子，也就是常说�
 
 ![因果掩码](imgs/attention-mask.png)
 
-因果掩码将方阵 $\bm A = \bm Q \bm K^\top$ 的上三角部分（图中黑色部分）设为 $-\infin$ 来实现只关注前面的嵌入向量。由于要将 $\bm A$ 每行 softmax，因为 $\exp(-\infin) = 0$，所以这相当于只对当前位置前面的注意力系数进行 softmax。于是得到带因果掩码的自注意力：
+因果掩码将方阵 $\bm S = \bm Q \bm K^\top$ 的上三角部分（图中黑色部分）设为 $-\infin$ 来实现只关注前面的嵌入向量。由于要将 $\bm S$ 每行 softmax，因为 $\exp(-\infin) = 0$，所以这相当于只对当前位置前面的注意力系数进行 softmax。于是得到带因果掩码的自注意力：
 
 $$
 \operatorname*{Attention}_\text{masked}(\bm Q, \bm K, \bm V) = \operatorname{Softmax}(\frac{\bm Q \bm K^\top}{\sqrt{D_k}} + \bm M) \bm V\\
@@ -448,17 +448,90 @@ $$
 
 # 位置编码
 
-Transformer 层对 token 序列排列等变，所以我们把输入进行位置编码来引入顺序信息。
+Transformer 层对 token 序列排列等变，所以对 NLP 等任务需要引入 token 的顺序信息。
 
-## *Attention Is All You Need* 中的位置编码
+这个过程中的核心问题是外推：进行自回归推理时产生的序列长度几倍于训练时输入的序列长度。推理时模型没见过这种长度的序列，产生的注意力分布可能异常。
 
-原文的位置编码计算矩阵 $\bm P \in \mathbb R^{N \times D}$ 并加到输入 $\bm X$ 上（逐元素相加）得到结果 $\tilde{\bm X} = \bm X + \bm P$。
+## *Attention Is All You Need* 中的绝对位置编码（正弦位置编码）
+
+原文的位置编码计算矩阵 $\bm P \in \mathbb R^{N \times D}$ 并加到**第一个 Transformer 层的输入** $\bm X$ 上（逐元素相加）得到结果 $\tilde{\bm X} = \bm X + \bm P$。
 
 我们定义
 
 $$
 \begin{cases}
-P_{t, 2i} &= \sin(t/L^{2i/D}) & \text{(即当特征维度索引是偶数)}\\
-P_{t, 2i+1} &= \cos(t/L^{2i/D}) & \text{(即当特征维度索引是奇数)}
-\end{cases}
+\operatorname{PE}(t, i) &= \sin(t/L^{i/D}) & (i\,\text{是偶数})\\
+\operatorname{PE}(t, i) &= \cos(t/L^{(i-1)/D}) & (i\,\text{是奇数})
+\end{cases}\\
+$$
+
+其中 $t$ 是 token 的绝对位置，$i$ 是特征维度索引。常数 $L$ 决定三角函数的最低频率（波长），原文取 $L=10000$。$D$ 需要是偶数。
+
+由于三角函数满足：
+
+$$
+\begin{bmatrix} \sin(t+i) \\ \cos(t+i) \end{bmatrix}
+= \begin{bmatrix} \cos(i) & \sin(i) \\ -\sin(i) & \cos(i) \end{bmatrix}
+\begin{bmatrix} \sin(t) \\ \cos(t) \end{bmatrix}
+$$
+
+所以一个位置的编码向量可以进行特定的线性变换得到另一个位置的位置编码向量。这里让 $\bm P$ 与 $\bm X$ 直接相加，希望模型能够学习到位置关系。
+
+## 旋转位置编码（RoPE）
+
+RoPE 也需要 $D$ 是偶数。它**对每个 Transformer 层，每个注意力头**的 $\bm Q$ 和 $\bm K$ 进行变换：
+
+$$
+\bm Q_{i, :}' = \bm R(i)Q_{i, :}\\
+\bm K_{i, :}' = \bm R(i)K_{i, :}
+$$
+
+$\bm R$ 函数构造一个旋转矩阵：
+
+$$
+\bm R(m) =
+\begin{bmatrix}
+\cos m\theta_1 & -\sin m\theta_1 & 0 & 0 & \cdots & 0 & 0 \\
+\sin m\theta_1 & \cos m\theta_1 & 0 & 0 & \cdots & 0 & 0 \\
+0 & 0 & \cos m\theta_2 & -\sin m\theta_2 & \cdots & 0 & 0 \\
+0 & 0 & \sin m\theta_2 & \cos m\theta_2 & \cdots & 0 & 0 \\
+\vdots & \vdots & \vdots & \ddots & \ddots & \vdots & \vdots \\
+0 & 0 & 0 & 0 & \cdots & \cos m\theta_{D/2} & -\sin m\theta_{D/2} \\
+0 & 0 & 0 & 0 & \cdots & \sin m\theta_{D/2} & \cos m\theta_{D/2} \\
+\end{bmatrix}
+$$
+
+$\theta_i$ 与位置 $m$ 决定旋转的速度。与刚才的正弦位置编码相同，$\theta_i=L^{-2i/D}$，$L = 10000$。
+
+当然工程上不会直接使用稀疏矩阵，而是这样计算：
+
+$$
+\bm{R}(m) \bm q =
+\begin{bmatrix}
+q_1 \\ q_2 \\ \vdots \\ q_{D-1} \\ q_{D} \end{bmatrix}
+\odot \begin{bmatrix} \cos m\theta_1 \\ \cos m\theta_1 \\ \cos m\theta_2 \\ \cos m\theta_2 \\ \vdots \\ \cos m\theta_{D/2} \\ \cos m\theta_{D/2} \end{bmatrix}
++ \begin{bmatrix} -q_2 \\ q_1 \\ -q_4 \\ q_3 \\ \vdots \\ -q_D \\ q_{D-1} \end{bmatrix}
+\odot \begin{bmatrix} \sin m\theta_1 \\ \sin m\theta_1 \\ \sin m\theta_2 \\ \sin m\theta_2 \\ \vdots \\ \sin m\theta_{D/2} \\ \sin m\theta_{D/2} \end{bmatrix}
+$$
+
+$\bm R(m)$ 表示的旋转具有清晰的几何意义：$D$ 个坐标轴两两配对，让向量围绕它的每对坐标轴构成的平面进行不同速度的旋转。于是注意力系数与 token 间的距离产生了关系：随相对距离增大振荡式衰减，如图。
+
+![点积振荡式衰减](imgs/RoPE-long-term-decay.png)
+
+## ALiBi
+
+既然 RoPE 让 softmax 前的注意力系数随相对距离增大而衰减，不妨去掉 RoPE，直接对它进行衰减。
+
+我们给注意力系数减去 $m$ 与 token 间距离之积，如图：
+
+![线性偏置](imgs/ALiBi.png)
+
+RoPE 进行不同速度的旋转，以捕捉不同尺度的距离下的模式（对于 LLM，就可以同时学语法、句式和文章结构这些）。为了达到这样的效果，这里不同的注意力头有不同的 $m$。不同层相同编号的头 $m$ 是相同的。
+
+为了实现外推，不能把 $m$ 作为可学习的参数，否则这个参数会对自己见过的序列长度过拟合。
+
+文中对 16 个头的模型，16 个 $m$ 是一个等比数列：
+
+$$
+2^{-0.5}, 2^{-1}, 2^{-1.5}, \dots, 2^{-8}
 $$
