@@ -414,7 +414,7 @@ $$
 
 而残差流 $\bm X + \bm F(\bm X)$ 让注意力和前馈层只需学习加在 $\bm X$ 上的增量，所以均值相对稳定，不是很有必要处理均值。
 
-## 纯解码 Transformer
+## 纯解码 Transformer（causal LM）
 
 输入前 $n-1$ 个 token，预测第 $n$ 个 token，或者说预测条件概率 $p(\bm x^{(n)} \mid \bm x^{(1)}, \dots, \bm x^{(n-1)})$ 然后采样。
 
@@ -423,7 +423,7 @@ GPT 等 LLM 就是通过这种方法自回归地生成句子，也就是常说�
 结构：
 
 1. 将输入的 token 序列查表（或者说词嵌入矩阵 $\bm E \in \mathbb R^{V \times D}$ 乘上 token 的独热向量，词嵌入矩阵作为参数参与训练）得到嵌入矩阵 $\bm X \in \mathbb R^{N \times D}$。
-2. 位置编码。
+2. 正弦位置编码。其他类型的位置编码一般在别的地方。
 3. 输入进堆叠了 $L$ 层的 Transformer 层，其中多头注意力带因果掩码。
 4. 一个 RMSNorm 层。
 5. 输入进 LM-head（语言模型头），这是一个线性层，对上一步的输出 $\tilde{\bm X}$ 每行都进行操作 $\bm x \mapsto \bm W_\text{lm} \bm x + \bm b_\text{lm} \in \mathbb R^V$，得到 logits 矩阵。一般这里有参数共享 $\bm W_\text{lm} = \bm E$，可以再对每行 softmax 得到概率分布。
@@ -482,8 +482,8 @@ $$
 RoPE 也需要 $D$ 是偶数。它**对每个 Transformer 层，每个注意力头**的 $\bm Q$ 和 $\bm K$ 进行变换：
 
 $$
-\bm Q_{i, :}' = \bm R(i)Q_{i, :}\\
-\bm K_{i, :}' = \bm R(i)K_{i, :}
+\tilde{\bm Q}_{i, :} = \bm R(i)Q_{i, :}\\
+\tilde{\bm K}_{i, :} = \bm R(i)K_{i, :}
 $$
 
 $\bm R$ 函数构造一个旋转矩阵：
@@ -514,9 +514,11 @@ q_1 \\ q_2 \\ \vdots \\ q_{D-1} \\ q_{D} \end{bmatrix}
 \odot \begin{bmatrix} \sin m\theta_1 \\ \sin m\theta_1 \\ \sin m\theta_2 \\ \sin m\theta_2 \\ \vdots \\ \sin m\theta_{D/2} \\ \sin m\theta_{D/2} \end{bmatrix}
 $$
 
-$\bm R(m)$ 表示的旋转具有清晰的几何意义：$D$ 个坐标轴两两配对，让向量围绕它的每对坐标轴构成的平面进行不同速度的旋转。于是注意力系数与 token 间的距离产生了关系：随相对距离增大振荡式衰减，如图。
+$\bm R(m)$ 表示的旋转具有清晰的几何意义：$D$ 个坐标轴两两配对，让向量围绕它的每对坐标轴 $(2i, 2i+1)$ 构成的平面进行不同速度的旋转。于是注意力系数与 token 间的距离产生了关系：随相对距离增大振荡式衰减，如图。
 
 ![点积振荡式衰减](imgs/RoPE-long-term-decay.png)
+
+RoPE 几乎没外推性，因为训练时的上下文长度一般不能让低频率（$\bm R$ 的最后几行或几列）的 sin 或 cos 函数取到完整的一个周期（完整转过一圈），导致这些地方没有训练数据，模型不认识，推理时困惑度暴增。
 
 ## ALiBi
 
@@ -535,3 +537,15 @@ RoPE 进行不同速度的旋转，以捕捉不同尺度的距离下的模式（
 $$
 2^{-0.5}, 2^{-1}, 2^{-1.5}, \dots, 2^{-8}
 $$
+
+ALiBi 外推性很好，但比起以 RoPE 为核心的位置编码，表达能力较弱。RoPE 每个 token 的嵌入都进行了旋转，并且有 $D/2$ 种频率，模型可以实现关注远处的信息，而 ALiBi 部分的头由于相对位置过大导致对远处有必要关注的 token 的注意力分数很难提高。所以说 ALiBi 有一个不太好的归纳偏置。
+
+## PI（Position Interpolation）
+
+## NTK-aware
+
+## YaRN
+
+## LongRoPE
+
+## CLEX
