@@ -228,7 +228,7 @@ $$
 * 可以用**无标签的数据**以**自监督**方式进行训练，这意味着无需人工标注数据，可以直接使用互联网或其他地方的海量数据；
 * 可以并行化，利用 GPU 等设备来训练。
 
-Transformer 层输入一个数据矩阵 $\bm X$，并输出一个**形状相同**的矩阵 $\bm Y = \operatorname{TransformerLayer}[\bm X]$。对于输入 $N$（`sequence_length`）个 token，token 向量维数为 $D$（`d_model`）的层，有 $\bm X \in \mathbb R^{N \times D}$，第 $i$ 个 token 向量为 $\bm x^{(i)} = \bm X_{i, :}^\top$。
+Transformer 层输入一个数据矩阵 $\bm X$，并输出一个**形状相同**的矩阵 $\bm Y = \operatorname{TransformerLayer}[\bm X]$。对于输入 $N$（`sequence_length`）个 token，token 向量维数为 $D$（`d_model`）的层，有 $\bm X \in \R^{N \times D}$，第 $i$ 个 token 向量为 $\bm x^{(i)} = \bm X_{i, :}^\top$。
 
 token 向量所在的空间（嵌入空间）每个方向都有特定的语义。对于 NLP，需要先给出分词算法（得到 token 集合），然后给出一个神经网络，它需要训练出 token 和嵌入向量的映射，它不需要预训练，直接初始化参数同 Transformer 一块开始训练。
 
@@ -279,7 +279,7 @@ $$
 
 $$
 \bm A_{n, :} = \operatorname{softmax} \bm S_{n, :}\\
-\bm A = \operatorname*{Softmax}_\text{对每行} \bm S \in \mathbb R^{N \times N}
+\bm A = \operatorname*{Softmax}_\text{对每行} \bm S \in \R^{N \times N}
 $$
 
 于是之前的公式就改成了简洁的矩阵乘法：
@@ -292,10 +292,10 @@ $$
 
 #### 加入参数
 
-我们这里还没有可学习的参数。我们加入一个参数矩阵 $\bm U \in \mathbb R^{D \times D}$。我们把所有的输入向量进行变换后再计算点积：
+我们这里还没有可学习的参数。我们加入一个参数矩阵 $\bm U \in \R^{D \times D}$。我们把所有的输入向量进行变换后再计算点积：
 
 $$
-\tilde{\bm X} = \bm X \bm U \in \mathbb R^{N \times D}\\
+\tilde{\bm X} = \bm X \bm U \in \R^{N \times D}\\
 \bm Y = \operatorname{Softmax}(\tilde{\bm X} \tilde{\bm X}^\top) \tilde{\bm X}
 $$
 
@@ -306,18 +306,18 @@ $$
 现在公式有三个 $\tilde{\bm X}$，我们把它们变成不同的三个矩阵。给出三个参数：
 
 $$
-\bm W^q \in \mathbb R^{D \times D_q}\\
-\bm W^k \in \mathbb R^{D \times D_k}\\
-\bm W^v \in \mathbb R^{D \times D_v}
+\bm W^q \in \R^{D \times D_q}\\
+\bm W^k \in \R^{D \times D_k}\\
+\bm W^v \in \R^{D \times D_v}
 $$
 
 式子变为：
 
 $$
-\bm Q = \bm X \bm W^q \in \mathbb R^{N \times D_q}\\
-\bm K = \bm X \bm W^k \in \mathbb R^{N \times D_k}\\
-\bm V = \bm X \bm W^v \in \mathbb R^{N \times D_v}\\
-\bm Y = \operatorname{Softmax}(\bm Q \bm K^\top) \bm V \in \mathbb R^{N \times D_v}
+\bm Q = \bm X \bm W^q \in \R^{N \times D_q}\\
+\bm K = \bm X \bm W^k \in \R^{N \times D_k}\\
+\bm V = \bm X \bm W^v \in \R^{N \times D_v}\\
+\bm Y = \operatorname{Softmax}(\bm Q \bm K^\top) \bm V \in \R^{N \times D_v}
 $$
 
 为了能进行括号内的矩阵乘法，必须要有 $D_q = D_k$。
@@ -361,7 +361,7 @@ $$
 
 后者更加稳定，因为把前馈层或多头注意力的输入进行了归一化。同时，因为没有改变 $\bm x$ 项，从而让雅可比变成 $\bm I + \dots$ 的连乘从而方便训练。
 
-把 $\bm Z \in \mathbb R^{N \times D}$ 的每行用一个多层感知机变换：
+把 $\bm Z \in \R^{N \times D}$ 的每行用一个多层感知机变换：
 
 $$
 \text{Linear} \to \text{ReLU} \to \text{Linear}
@@ -385,14 +385,14 @@ $$
 
 ### 层归一化和 RMSNorm 的过程
 
-层归一化 $\operatorname{LayerNorm}: \mathbb R^{N \times D} \to \mathbb R^{N \times D}$ 计算每个特征维度的均值方差：
+层归一化 $\operatorname{LayerNorm}: \R^{N \times D} \to \R^{N \times D}$ 计算每个特征维度的均值方差：
 
 $$
 \begin{aligned}
 & \bm\mu = \frac 1 D \sum_{i=1}^D \bm X_{i, :}\\
 & \sigma_i = \sqrt{\delta + \frac 1 D \sum_{j=1}^D (X_{j, i} - \mu_i)^2}\\
 & \bm X' = \frac{\bm X - \bm\mu}{\bm\sigma}\\
-& \bm\gamma, \bm\beta \in \mathbb R^{D}\\
+& \bm\gamma, \bm\beta \in \R^{D}\\
 & \operatorname{LayerNorm}(\bm X) = \bm\gamma \odot \bm X' + \bm\beta
 \end{aligned}
 $$
@@ -422,11 +422,11 @@ GPT 等 LLM 就是通过这种方法自回归地生成句子，也就是常说�
 
 结构：
 
-1. 将输入的 token 序列查表（或者说词嵌入矩阵 $\bm E \in \mathbb R^{V \times D}$ 乘上 token 的独热向量，词嵌入矩阵作为参数参与训练）得到嵌入矩阵 $\bm X \in \mathbb R^{N \times D}$。
+1. 将输入的 token 序列查表（或者说词嵌入矩阵 $\bm E \in \R^{V \times D}$ 乘上 token 的独热向量，词嵌入矩阵作为参数参与训练）得到嵌入矩阵 $\bm X \in \R^{N \times D}$。
 2. 正弦位置编码。其他类型的位置编码一般在别的地方。
 3. 输入进堆叠了 $L$ 层的 Transformer 层，其中多头注意力带因果掩码。
 4. 一个 RMSNorm 层。
-5. 输入进 LM-head（语言模型头），这是一个线性层，对上一步的输出 $\tilde{\bm X}$ 每行都进行操作 $\bm x \mapsto \bm W_\text{lm} \bm x + \bm b_\text{lm} \in \mathbb R^V$，得到 logits 矩阵。一般这里有参数共享 $\bm W_\text{lm} = \bm E$，可以再对每行 softmax 得到概率分布。
+5. 输入进 LM-head（语言模型头），这是一个线性层，对上一步的输出 $\tilde{\bm X}$ 每行都进行操作 $\bm x \mapsto \bm W_\text{lm} \bm x + \bm b_\text{lm} \in \R^V$，得到 logits 矩阵。一般这里有参数共享 $\bm W_\text{lm} = \bm E$，可以再对每行 softmax 得到概率分布。
 
 我们在训练时想让位置 $i$ 关注它前面的所有嵌入，然后来预测 $i+1$ 个 token 的嵌入。这样对输入的单个样本，可以同时学习所有位置的下个 token 的条件概率分布。
 
@@ -454,7 +454,7 @@ Transformer 层对 token 序列排列等变，所以对 NLP 等任务需要引�
 
 ## *Attention Is All You Need* 中的绝对位置编码（正弦位置编码）
 
-原文的位置编码计算矩阵 $\bm P \in \mathbb R^{N \times D}$ 并加到**第一个 Transformer 层的输入** $\bm X$ 上（逐元素相加）得到结果 $\tilde{\bm X} = \bm X + \bm P$。
+原文的位置编码计算矩阵 $\bm P \in \R^{N \times D}$ 并加到**第一个 Transformer 层的输入** $\bm X$ 上（逐元素相加）得到结果 $\tilde{\bm X} = \bm X + \bm P$。
 
 我们定义
 
@@ -514,11 +514,13 @@ q_1 \\ q_2 \\ \vdots \\ q_{D-1} \\ q_{D} \end{bmatrix}
 \odot \begin{bmatrix} \sin m\theta_1 \\ \sin m\theta_1 \\ \sin m\theta_2 \\ \sin m\theta_2 \\ \vdots \\ \sin m\theta_{D/2} \\ \sin m\theta_{D/2} \end{bmatrix}
 $$
 
-$\bm R(m)$ 表示的旋转具有清晰的几何意义：$D$ 个坐标轴两两配对，让向量围绕它的每对坐标轴 $(2i, 2i+1)$ 构成的平面进行不同速度的旋转。于是注意力系数与 token 间的距离产生了关系：随相对距离增大振荡式衰减，如图。
+$\bm R(m)$ 表示的旋转具有清晰的几何意义：$D$ 个坐标轴两两配对，让向量围绕它的每对坐标轴 $(2i, 2i+1)$ 构成的平面进行不同速度的旋转，每个旋转只改变对应的两个维度的分量。于是注意力系数与 token 间的距离产生了关系：随相对距离增大振荡式衰减，如图。
 
 ![点积振荡式衰减](imgs/RoPE-long-term-decay.png)
 
 RoPE 几乎没外推性，因为训练时的上下文长度一般不能让低频率（$\bm R$ 的最后几行或几列）的 sin 或 cos 函数取到完整的一个周期（完整转过一圈），导致这些地方没有训练数据，模型不认识，推理时困惑度暴增。
+
+![超出训练时的上下文长度后困惑度暴增](imgs/RoPE-PPL.png)
 
 ## ALiBi
 
@@ -542,9 +544,21 @@ ALiBi 外推性很好，但比起以 RoPE 为核心的位置编码，表达能�
 
 ## PI（Position Interpolation）
 
+PI 方法将推理时的旋转幅度减小到训练时的范围，具体来说，$\bm R(m) \mapsto \bm R(m / s)$，其中 $s = N_\text{new} / N_\text{train}$。更常见的实现是缩放 $\theta_i$。
+
+PI 的缺陷很明显，对高频的正弦波采样更密集，导致短距离的处理能力变差。但是原文中进行微调后能基本缓解。
+
 ## NTK-aware
 
+RoPE 中有 $\theta_i=L^{-2i/D}$，NTK-aware 方法通过改变底数 $L \to L'$ 使高频率区域的改变不大（由于只改变底数，这一点天然满足），最低频的 $\theta_{D/2}$ 是原来的 $1/s$。解方程得到 $L' = L \cdot s^{D/(D-2)}$。
+
+由于高频改变小，所以这个方法可以不需要再微调，但由于还是进行统一的压缩，在更长外推（$s \ge 8$）时，由于低频区域采样太密集，还是会性能下降。
+
 ## YaRN
+
+YaRN 将 NTK-by-parts 和 Temperature Scaling 方法一同使用。
+
+NTK-by-parts 将维度分为高频、中频、低频三段，每段对 $\theta_i$ 进行不同缩放。高频不做处理，低频直接缩放到 $1/s$，中频区缩放系数在 $1$ 和 $1/s$ 之间线性插值来过度。
 
 ## LongRoPE
 
