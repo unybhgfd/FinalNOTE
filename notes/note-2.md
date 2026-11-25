@@ -560,6 +560,10 @@ YaRN 将 NTK-by-parts 和 Temperature Scaling 方法一同使用。
 
 NTK-by-parts 将维度分为高频、中频、低频三段，每段对 $\theta_i$ 进行不同缩放。高频不做处理，低频直接缩放到 $1/s$，中频区缩放系数在 $1$ 和 $1/s$ 之间线性插值来过度。
 
+Temperature Scaling 把注意力中 softmax 前的值扩大一个特定倍数。具体来说，乘上 $t = (0.1 \ln(s+1))^2$。这个公式是经验拟合的，没什么特定意义。根据 softmax 的性质，缩放后 softmax 的输出分布更加尖锐，注意力就更集中。
+
+Temperature Scaling 常见的实现是使用 Attention Scale。为了不修改计算注意力的 kernel 代码，将 RoPE 的旋转矩阵 $\bm R(m)$ 乘上 $\sqrt{1/t}$ 可以达到相同的效果。
+
 ## LongRoPE
 
 ## CLEX
